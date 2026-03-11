@@ -2,7 +2,6 @@
 
 import { ReactNode, useEffect } from 'react'
 import AppSidebar from '../zen/AppSidebar'
-import ZenTopBar  from '../zen/ZenTopBar'
 import { ToastContainer } from '../ui/ToastContainer'
 import { ModalContainer } from '../ui/ModalContainer'
 import { NetworkStatusIndicator } from '../ui/NetworkStatusIndicator'
@@ -20,13 +19,10 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, [isAuthenticated, initializeApp])
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="min-h-svh flex bg-background">
       <AppSidebar />
-      <main className="flex-1 flex flex-col min-w-0">
-        <ZenTopBar />
-        <div className="flex-1 p-4 lg:p-6 xl:p-8 overflow-y-auto">
-          {children}
-        </div>
+      <main className="flex-1 ml-[72px] overflow-y-auto">
+        {children}
       </main>
       <ToastContainer />
       <ModalContainer />

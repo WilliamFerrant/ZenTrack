@@ -1,54 +1,57 @@
 'use client'
 
 import { useMemo } from 'react'
-import { motion } from 'framer-motion'
+import { Flame, Target, Clock } from 'lucide-react'
 import { useDataStore } from '@/stores'
 
-// SVG circle-as-path gauge (matches reference exactly)
-const CIRC = 2 * Math.PI * 15.9155   // ≈ 100
-
-function SummaryCard({
-  title, value, gaugeValue, delay = 0,
+const GaugeRing = ({
+  value,
+  max,
+  size = 48,
+  strokeWidth = 4,
 }: {
-  title: string; value: string; gaugeValue?: number; delay?: number
-}) {
+  value: number
+  max: number
+  size?: number
+  strokeWidth?: number
+}) => {
+  const r = (size - strokeWidth) / 2
+  const c = 2 * Math.PI * r
+  const pct = Math.min(value / max, 1)
+  const offset = c - pct * c
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.1 + delay, ease: [0.32, 0.72, 0, 1] }}
-      className="glass-card p-5"
-    >
-      <h3 className="text-muted-foreground text-xs font-medium uppercase tracking-wider">{title}</h3>
-      <div className="flex items-end justify-between mt-2">
-        <p className="text-2xl font-semibold text-foreground tabular-nums">{value}</p>
-        {gaugeValue !== undefined && (
-          <div className="w-10 h-10">
-            <svg viewBox="0 0 36 36" className="w-full h-full">
-              <path
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                fill="none" stroke="hsl(var(--muted) / 0.15)" strokeWidth="3"
-              />
-              <motion.path
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                fill="none" stroke="hsl(var(--primary))" strokeWidth="3" strokeLinecap="round"
-                style={{ filter: 'drop-shadow(0 0 4px hsl(var(--primary) / 0.3))' }}
-                initial={{ strokeDasharray: `0, ${CIRC}` }}
-                animate={{ strokeDasharray: `${(gaugeValue / 100) * CIRC}, ${CIRC}` }}
-                transition={{ duration: 1, delay: 0.5, ease: [0.32, 0.72, 0, 1] }}
-              />
-            </svg>
-          </div>
-        )}
-      </div>
-    </motion.div>
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
+      <circle
+        className="text-muted/15"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        fill="transparent"
+        r={r}
+        cx={size / 2}
+        cy={size / 2}
+      />
+      <circle
+        className="text-primary"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        fill="transparent"
+        r={r}
+        cx={size / 2}
+        cy={size / 2}
+        strokeLinecap="round"
+        strokeDasharray={c}
+        strokeDashoffset={offset}
+        style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }}
+      />
+    </svg>
   )
 }
 
-function fmtHM(sec: number) {
-  const h = String(Math.floor(sec / 3600)).padStart(2, '0')
-  const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0')
-  return `${h}:${m}`
+function fmtHm(sec: number) {
+  const h = Math.floor(sec / 3600)
+  const m = Math.floor((sec % 3600) / 60)
+  return h > 0 ? `${h}h ${m > 0 ? m + 'm' : ''}`.trim() : `${m}m`
 }
 
 export default function DailySummary() {
@@ -56,13 +59,15 @@ export default function DailySummary() {
 
   const total    = dashboardSummary?.totals?.total_time    ?? 0
   const billable = dashboardSummary?.totals?.billable_time ?? 0
-  const billPct  = total > 0 ? Math.round((billable / total) * 100) : 0
+  const focusPct = total > 0 ? Math.round((billable / total) * 100) : 0
 
   const streak = useMemo(() => {
-    const seen = new Set(recentEntries.map(e => {
-      const d = new Date(e.start_time instanceof Date ? e.start_time : String(e.start_time))
-      return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
-    }))
+    const seen = new Set(
+      recentEntries.map(e => {
+        const d = new Date(e.start_time instanceof Date ? e.start_time : String(e.start_time))
+        return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+      })
+    )
     let count = 0
     const d = new Date()
     while (count < 365) {
@@ -75,10 +80,45 @@ export default function DailySummary() {
   }, [recentEntries])
 
   return (
-    <div className="space-y-4">
-      <SummaryCard title="Total Today"     value={fmtHM(total)}     delay={0}    />
-      <SummaryCard title="Billable"        value={`${billPct}%`}    gaugeValue={billPct} delay={0.05} />
-      <SummaryCard title="Current Streak"  value={`${streak} Day${streak !== 1 ? 's' : ''}`} delay={0.1} />
+    <div className="bento-card p-5 flex flex-col gap-4 animate-fade-in" style={{ animationDelay: '100ms' }}>
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Today</p>
+
+      <div className="flex items-center gap-3">
+        <div className="p-2.5 rounded-2xl" style={{ background: 'hsl(var(--primary) / 0.1)' }}>
+          <Clock size={18} className="text-primary" strokeWidth={1.8} />
+        </div>
+        <div>
+          <p className="text-2xl font-light tabular-time text-foreground">{fmtHm(total)}</p>
+          <p className="text-[10px] text-muted-foreground/60">Total tracked</p>
+        </div>
+      </div>
+
+      <div className="h-px" style={{ background: 'hsl(0 0% 100% / 0.06)' }} />
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <GaugeRing value={focusPct} max={100} size={40} strokeWidth={3.5} />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Target size={12} className="text-primary" />
+            </div>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-foreground">{focusPct}%</p>
+            <p className="text-[10px] text-muted-foreground/60">Billable</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl" style={{ background: 'hsl(var(--primary) / 0.1)' }}>
+            <Flame size={14} className="text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-foreground">{streak} {streak === 1 ? 'day' : 'days'}</p>
+            <p className="text-[10px] text-muted-foreground/60">Streak</p>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

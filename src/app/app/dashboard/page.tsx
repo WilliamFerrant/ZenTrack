@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect } from 'react'
-import { motion } from 'framer-motion'
 import { Plus } from 'lucide-react'
 import { useDataStore, useTimerStore } from '@/stores'
 import TimerCard    from '@/components/zen/TimerCard'
 import DailySummary from '@/components/zen/DailySummary'
+import NowPlaying   from '@/components/zen/NowPlaying'
+import QuickActions from '@/components/zen/QuickActions'
 import ProjectsGrid from '@/components/zen/ProjectsGrid'
 import TimeEntries  from '@/components/zen/TimeEntries'
 
@@ -20,43 +21,45 @@ export default function DashboardPage() {
   }, []) // eslint-disable-line
 
   return (
-    <>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-        {/* Timer — 2 cols */}
-        <div className="lg:col-span-2">
+    <div className="p-3 lg:p-4 overflow-y-auto">
+      <div className="grid grid-cols-12 gap-3 lg:gap-4 auto-rows-min max-w-[1600px] mx-auto">
+
+        {/* Row 1 — QuickActions | Timer | Daily+NowPlaying */}
+        <div className="col-span-12 lg:col-span-3 flex flex-col gap-3 lg:gap-4">
+          <QuickActions />
+        </div>
+
+        <div className="col-span-12 lg:col-span-5">
           <TimerCard />
         </div>
 
-        {/* Daily summary — 1 col */}
-        <div className="lg:col-span-1">
+        <div className="col-span-12 lg:col-span-4 flex flex-col gap-3 lg:gap-4">
           <DailySummary />
+          <NowPlaying />
         </div>
 
-        {/* Projects — full width */}
-        <div className="lg:col-span-3">
+        {/* Row 2 — Projects | TimeEntries */}
+        <div className="col-span-12 lg:col-span-7">
           <ProjectsGrid />
         </div>
 
-        {/* Time entries — full width */}
-        <div className="lg:col-span-3">
+        <div className="col-span-12 lg:col-span-5">
           <TimeEntries />
         </div>
       </div>
 
-      {/* FAB — mobile only */}
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
+      {/* FAB */}
+      <button
         onClick={() => { if (!isRunning) startTimer().catch(() => {}) }}
-        className="fixed bottom-6 right-6 rounded-full h-14 w-14 flex items-center justify-center shadow-lg lg:hidden"
+        className="fixed bottom-6 right-6 h-12 px-5 flex items-center justify-center gap-2 rounded-full font-medium glow-primary glow-primary-hover transition-all duration-300 hover:-translate-y-1 active:scale-95 z-50 text-sm"
         style={{
           background: 'hsl(var(--primary))',
           color: 'hsl(var(--primary-foreground))',
-          boxShadow: '0 4px 20px hsl(var(--primary) / 0.3)',
         }}
       >
-        <Plus size={24} />
-      </motion.button>
-    </>
+        <Plus size={18} />
+        New Timer
+      </button>
+    </div>
   )
 }

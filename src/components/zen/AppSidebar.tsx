@@ -1,16 +1,16 @@
 'use client'
 
-import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { BarChart2, FolderOpen, Clock, FileText, History, Settings, LogOut } from 'lucide-react'
+import { LayoutGrid, FolderOpen, Timer, BarChart2, Clock, Settings } from 'lucide-react'
 import { useAuthStore } from '@/stores'
 
 const NAV = [
-  { icon: BarChart2,  label: 'Dashboard', href: '/app/dashboard' },
+  { icon: LayoutGrid, label: 'Dashboard', href: '/app/dashboard' },
   { icon: FolderOpen, label: 'Projects',  href: '/app/projects'  },
-  { icon: Clock,      label: 'Timer',     href: '/app/tracking'  },
-  { icon: FileText,   label: 'Reports',   href: '/app/reports'   },
-  { icon: History,    label: 'History',   href: '/app/reports'   },
+  { icon: Timer,      label: 'Timer',     href: '/app/tracking'  },
+  { icon: BarChart2,  label: 'Reports',   href: '/app/reports'   },
+  { icon: Clock,      label: 'History',   href: '/app/reports'   },
+  { icon: Settings,   label: 'Settings',  href: '/app/settings'  },
 ]
 
 export default function AppSidebar() {
@@ -18,63 +18,65 @@ export default function AppSidebar() {
   const router   = useRouter()
   const { user, logout } = useAuthStore()
 
+  const initial = (user?.first_name?.[0] ?? 'U').toUpperCase()
+
   const handleLogout = async () => {
     try { await logout(); router.push('/login') } catch {}
   }
 
   return (
-    <aside className="w-64 p-6 flex-shrink-0 hidden lg:flex flex-col"
-      style={{ background: 'hsl(var(--sidebar-background))', borderRight: '1px solid hsl(var(--border) / 0.05)' }}>
-      {/* Brand */}
-      <Link href="/app/dashboard"
-        className="text-2xl font-bold text-foreground mb-12 tracking-tight block hover:opacity-80 transition-opacity">
-        ZenTrack
-      </Link>
+    <nav
+      className="fixed top-0 left-0 h-full w-[72px] flex flex-col items-center py-5 gap-6 z-50"
+      style={{
+        background: 'hsl(var(--sidebar-background))',
+        borderRight: '1px solid hsl(0 0% 100% / 0.06)',
+      }}
+    >
+      {/* Logo */}
+      <button
+        onClick={() => router.push('/app/dashboard')}
+        className="w-10 h-10 rounded-2xl flex items-center justify-center mb-2 transition-opacity hover:opacity-80"
+        style={{ background: 'hsl(var(--primary) / 0.15)' }}
+      >
+        <span className="text-primary font-bold text-sm">ZT</span>
+      </button>
 
-      {/* Nav */}
-      <nav className="flex-1 space-y-1">
+      {/* Nav items */}
+      <div className="flex flex-col gap-1 w-full px-2">
         {NAV.map(({ icon: Icon, label, href }) => {
-          const active = pathname === href || pathname.startsWith(href + '/')
+          const active = pathname === href || (pathname.startsWith(href + '/') && href !== '/app/reports')
           return (
-            <Link key={label} href={href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors w-full text-left ${
+            <button
+              key={label}
+              onClick={() => router.push(href)}
+              className={`flex flex-col items-center justify-center gap-0.5 w-full py-2.5 rounded-2xl transition-all duration-200 ${
                 active
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                  ? 'text-primary bg-primary/10'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/10'
               }`}
+              aria-label={label}
             >
-              <Icon size={20} strokeWidth={active ? 2 : 1.6} />
-              <span className="font-medium text-sm">{label}</span>
-            </Link>
+              <Icon size={20} strokeWidth={active ? 2.2 : 1.8} />
+              <span className="text-[9px] font-medium mt-0.5">{label}</span>
+            </button>
           )
         })}
-      </nav>
+      </div>
 
-      {/* Settings */}
-      <Link href="/app/settings"
-        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors mb-2">
-        <Settings size={20} strokeWidth={1.6} />
-        <span className="font-medium text-sm">Settings</span>
-      </Link>
-
-      {/* User */}
-      <div className="flex items-center gap-3 px-1 pt-3"
-        style={{ borderTop: '1px solid hsl(var(--border) / 0.06)' }}>
-        <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0"
-          style={{ background: 'hsl(var(--primary) / 0.2)', color: 'hsl(var(--primary))' }}>
-          {user?.first_name?.[0]?.toUpperCase() || 'U'}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-sm text-foreground truncate">
-            {user?.first_name} {user?.last_name}
-          </p>
-          <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-        </div>
-        <button onClick={handleLogout} title="Sign out"
-          className="text-muted-foreground hover:text-foreground transition-colors p-1">
-          <LogOut size={15} strokeWidth={1.6} />
+      {/* Bottom: avatar + logout */}
+      <div className="mt-auto flex flex-col items-center gap-2">
+        <button
+          onClick={handleLogout}
+          title="Sign out"
+          className="w-9 h-9 rounded-full flex items-center justify-center text-primary text-xs font-semibold transition-opacity hover:opacity-80"
+          style={{
+            background: 'hsl(var(--primary) / 0.2)',
+            boxShadow: '0 0 0 2px hsl(var(--primary) / 0.1)',
+          }}
+        >
+          {initial}
         </button>
       </div>
-    </aside>
+    </nav>
   )
 }
