@@ -3,31 +3,146 @@
 @tailwind utilities;
 
 @layer base {
-  html {
-    font-family: 'Inter', system-ui, sans-serif;
-    background-color: #1f1f1f;
-    color: #e5e7eb;
+  :root {
+    --background: 0 0% 10%;
+    --foreground: 220 9% 91%;
+
+    --card: 0 0% 14%;
+    --card-foreground: 220 9% 91%;
+
+    --popover: 0 0% 14%;
+    --popover-foreground: 220 9% 91%;
+
+    --primary: 166 18% 70%;
+    --primary-foreground: 0 0% 10%;
+
+    --secondary: 0 0% 100%;
+    --secondary-foreground: 220 9% 91%;
+
+    --muted: 220 6% 32%;
+    --muted-foreground: 220 8% 65%;
+
+    --accent: 166 18% 70%;
+    --accent-foreground: 0 0% 10%;
+
+    --destructive: 0 63% 50%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 0 0% 100% / 0.06;
+    --input: 0 0% 100% / 0.06;
+    --ring: 166 18% 70%;
+
+    --radius: 1.25rem;
+
+    --glow: 166 28% 62%;
+    --card-sage: 166 20% 82%;
+
+    --sidebar-background: 0 0% 8%;
+    --sidebar-foreground: 220 8% 65%;
+    --sidebar-primary: 166 18% 70%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 0 0% 100% / 0.06;
+    --sidebar-accent-foreground: 220 9% 91%;
+    --sidebar-border: 0 0% 100% / 0.06;
+    --sidebar-ring: 166 18% 70%;
   }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+
+  p, span {
+    text-wrap: pretty;
+  }
+
   * {
     scrollbar-width: thin;
-    scrollbar-color: #333 transparent;
+    scrollbar-color: hsl(var(--muted)) transparent;
   }
 }
 
 @layer components {
-  .card {
-    @apply bg-[#272727] border border-[#333] rounded-3xl;
+  .bento-card {
+    @apply rounded-3xl border border-border;
+    background: hsl(var(--card) / 0.65);
+    backdrop-filter: blur(40px) saturate(1.4);
+    box-shadow:
+      0 0 0 1px hsl(0 0% 100% / 0.04),
+      inset 0 1px 0 0 hsl(0 0% 100% / 0.04),
+      0 8px 40px -12px rgba(0, 0, 0, 0.5);
   }
-  .btn-accent {
-    @apply bg-[#b0c4b1] hover:bg-[#c4d5c5] text-[#1f1f1f] font-semibold rounded-2xl transition-colors disabled:opacity-40;
+
+  .bento-card-hover {
+    @apply bento-card transition-all duration-300 cursor-pointer;
   }
-  .btn-ghost {
-    @apply bg-[#2e2e2e] hover:bg-[#363636] text-[#e5e7eb] font-medium rounded-2xl transition-colors;
+
+  .bento-card-hover:hover {
+    transform: translateY(-3px) scale(1.005);
+    box-shadow:
+      0 0 0 1px hsl(0 0% 100% / 0.06),
+      inset 0 1px 0 0 hsl(0 0% 100% / 0.06),
+      0 20px 60px -15px rgba(0, 0, 0, 0.6);
   }
-  .input-dark {
-    @apply w-full bg-[#2e2e2e] border border-[#3a3a3a] text-[#e5e7eb] placeholder-[#555] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#b0c4b1] transition-colors;
+
+  .bento-sage {
+    @apply rounded-3xl border border-border;
+    background: hsl(var(--card-sage) / 0.12);
+    backdrop-filter: blur(40px) saturate(1.4);
+    box-shadow:
+      0 0 0 1px hsl(var(--primary) / 0.08),
+      inset 0 1px 0 0 hsl(var(--primary) / 0.06),
+      0 8px 40px -12px rgba(0, 0, 0, 0.4);
   }
+
+  .tabular-time {
+    font-feature-settings: 'tnum';
+    font-variant-numeric: tabular-nums;
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 24px 0 hsl(var(--glow) / 0.22);
+  }
+
+  .glow-primary-hover:hover {
+    box-shadow: 0 0 36px 0 hsl(var(--glow) / 0.38);
+  }
+
+  .input-zen {
+    @apply w-full bg-white/5 border border-white/[0.06] text-foreground placeholder:text-muted-foreground
+           rounded-xl px-3 py-2.5 text-sm outline-none transition-colors;
+  }
+  .input-zen:focus {
+    @apply border-primary/40;
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.08);
+  }
+
+  .btn-primary-zen {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl font-medium
+           bg-primary text-primary-foreground transition-all duration-300
+           hover:-translate-y-0.5 active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none;
+  }
+
+  .btn-ghost-zen {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl font-medium
+           text-muted-foreground hover:text-foreground hover:bg-white/[0.06]
+           transition-all duration-200 active:scale-95;
+  }
+
   .tag {
-    @apply px-2.5 py-1 rounded-lg text-xs font-medium transition-colors;
+    @apply px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer;
   }
 }

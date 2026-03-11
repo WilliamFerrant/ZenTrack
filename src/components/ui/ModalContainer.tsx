@@ -49,15 +49,15 @@ export function ModalContainer() {
               &#8203;
             </span>
 
-            <div className="inline-block align-bottom bg-[#252525] border border-[#333] rounded-3xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div className="inline-block align-bottom bento-card px-4 pt-5 pb-4 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
               {/* Modal Header */}
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-[#e5e7eb]">
+                <h3 className="text-lg font-medium text-foreground">
                   {modal.title}
                 </h3>
                 <button
                   onClick={() => hideModal(modal.id)}
-                  className="text-[#555] hover:text-[#9ca3af] focus:outline-none"
+                  className="text-muted-foreground hover:text-foreground focus:outline-none"
                 >
                   <span className="sr-only">Close</span>
                   <XMarkIcon className="w-6 h-6" />
@@ -73,7 +73,7 @@ export function ModalContainer() {
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={() => hideModal(modal.id)}
-                  className="px-4 py-2 text-sm font-medium text-[#e5e7eb] bg-[#2e2e2e] border border-[#3a3a3a] rounded-xl hover:bg-[#363636] focus:outline-none transition-colors"
+                  className="btn-ghost-zen px-4 py-2 text-sm"
                 >
                   {modal.cancelText || 'Cancel'}
                 </button>
@@ -83,7 +83,7 @@ export function ModalContainer() {
                       modal.onConfirm?.()
                       hideModal(modal.id)
                     }}
-                    className="px-4 py-2 text-sm font-medium text-[#1f1f1f] bg-[#b0c4b1] border border-transparent rounded-xl hover:bg-[#c4d5c5] focus:outline-none transition-colors"
+                    className="btn-primary-zen px-4 py-2 text-sm"
                   >
                     {modal.confirmText || 'Confirm'}
                   </button>

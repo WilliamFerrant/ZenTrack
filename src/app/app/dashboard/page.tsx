@@ -1,378 +1,66 @@
-// Dashboard page — modern bento layout
+// Dashboard — bento grid layout
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useDataStore, useTimerStore, useFormattedElapsedTime } from '@/stores'
-import { api } from '@/lib/api'
+import { useEffect } from 'react'
+import { Plus } from 'lucide-react'
+import { useDataStore, useTimerStore } from '@/stores'
+import QuickActions from '@/components/zen/QuickActions'
+import TimerCard from '@/components/zen/TimerCard'
+import DailySummary from '@/components/zen/DailySummary'
+import WeekStats from '@/components/zen/WeekStats'
+import ProjectsGrid from '@/components/zen/ProjectsGrid'
+import TimeEntries from '@/components/zen/TimeEntries'
 
-// ── helpers ───────────────────────────────────────────────────────────────────
-function fmtTime(sec: number): string {
-  if (!sec) return '0m'
-  const h = Math.floor(sec / 3600)
-  const m = Math.floor((sec % 3600) / 60)
-  return h > 0 ? `${h}h ${m}m` : `${m}m`
-}
-function toDate(v: unknown): Date {
-  return v instanceof Date ? v : new Date(String(v))
-}
-function isToday(v: unknown) {
-  const d = toDate(v), t = new Date()
-  return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate()
-}
-function isThisWeek(v: unknown) {
-  const d = toDate(v), s = new Date()
-  s.setDate(s.getDate() - s.getDay()); s.setHours(0, 0, 0, 0)
-  return d >= s
-}
-function isThisMonth(v: unknown) {
-  const d = toDate(v), t = new Date()
-  return d.getMonth() === t.getMonth() && d.getFullYear() === t.getFullYear()
-}
-function fmtClock(v: unknown) {
-  return toDate(v).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
-}
-
-// ── Arc gauge ─────────────────────────────────────────────────────────────────
-function ArcGauge({ pct }: { pct: number }) {
-  const r = 36, cx = 52, cy = 52
-  const full = Math.PI * r        // half arc
-  const filled = pct * full
-  const x = (a: number) => cx + r * Math.cos(a)
-  const y = (a: number) => cy + r * Math.sin(a)
-  const arc = (a1: number, a2: number, color: string) => {
-    const d = `M ${x(a1)} ${y(a1)} A ${r} ${r} 0 ${a2 - a1 > Math.PI ? 1 : 0} 1 ${x(a2)} ${y(a2)}`
-    return <path d={d} fill="none" stroke={color} strokeWidth="8" strokeLinecap="round" />
-  }
-  const a0 = Math.PI, a1 = Math.PI + pct * Math.PI
-  return (
-    <svg viewBox="0 0 104 74" className="w-full max-w-[140px]">
-      {arc(Math.PI, 2 * Math.PI, '#2e2e2e')}
-      {pct > 0 && arc(a0, a1, '#b0c4b1')}
-      <circle cx={x(a1)} cy={y(a1)} r="5" fill="#b0c4b1" />
-    </svg>
-  )
-}
-
-// ── Donut ─────────────────────────────────────────────────────────────────────
-function Donut({ val, total, label }: { val: number; total: number; label: string }) {
-  const r = 30, circ = 2 * Math.PI * r
-  const pct = total > 0 ? Math.min(val / total, 1) : 0
-  return (
-    <svg viewBox="0 0 80 80" className="w-20 h-20">
-      <circle cx="40" cy="40" r={r} fill="none" stroke="#2e2e2e" strokeWidth="10" />
-      {pct > 0 && (
-        <circle cx="40" cy="40" r={r} fill="none" stroke="#b0c4b1" strokeWidth="10"
-          strokeDasharray={`${pct * circ} ${circ}`} strokeLinecap="round"
-          transform="rotate(-90 40 40)" />
-      )}
-      <text x="40" y="44" textAnchor="middle" fontSize="13" fontWeight="700" fill="#e5e7eb">
-        {total > 0 ? `${Math.round(pct * 100)}%` : '—'}
-      </text>
-      <text x="40" y="56" textAnchor="middle" fontSize="7" fill="#6b7280">{label}</text>
-    </svg>
-  )
-}
-
-// ── Toggle chip ───────────────────────────────────────────────────────────────
-function Toggle({ on }: { on: boolean }) {
-  return (
-    <div className={`w-9 h-5 rounded-full relative transition-colors ${on ? 'bg-[#b0c4b1]' : 'bg-[#333]'}`}>
-      <div className={`absolute top-1 w-3 h-3 rounded-full shadow transition-all ${on ? 'left-5 bg-[#1f1f1f]' : 'left-1 bg-[#555]'}`} />
-    </div>
-  )
-}
-
-// ── Bar chart (weekly daily breakdown) ───────────────────────────────────────
-function WeekBars({ data }: { data: Array<{ date: string; total_time: number }> }) {
-  const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
-  const max = Math.max(...data.map(d => d.total_time), 1)
-  const today = new Date().getDay()
-
-  return (
-    <div className="flex items-end gap-1.5 h-12">
-      {days.map((d, i) => {
-        const entry = data[i]
-        const h = entry ? (entry.total_time / max) * 100 : 0
-        const isToday2 = (i + 1) % 7 === today % 7
-        return (
-          <div key={i} className="flex flex-col items-center gap-1 flex-1">
-            <div className="w-full rounded-sm transition-all"
-              style={{ height: `${Math.max(h, 4)}%`, backgroundColor: isToday2 ? '#b0c4b1' : (h > 0 ? '#3a4a3b' : '#2a2a2a') }} />
-            <span className={`text-[9px] ${isToday2 ? 'text-[#b0c4b1]' : 'text-[#444]'}`}>{d}</span>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-// ── Main ──────────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const [tab, setTab] = useState<'today' | 'week' | 'month' | 'all'>('today')
-  const [weekData, setWeekData] = useState<any>(null)
-
-  const {
-    recentEntries, projects, dashboardSummary, isLoadingEntries,
-    fetchRecentEntries, fetchProjects, fetchDashboardSummary,
-  } = useDataStore()
-
-  const {
-    isRunning, isStarting, isStopping, currentTimer,
-    selectedProject, description,
-    setSelectedProject, updateDescription, startTimer, stopTimer,
-  } = useTimerStore()
-
-  const elapsed = useFormattedElapsedTime()
+  const { fetchRecentEntries, fetchProjects, fetchDashboardSummary } = useDataStore()
+  const { isRunning, startTimer } = useTimerStore()
 
   useEffect(() => {
     fetchRecentEntries(50)
     fetchProjects()
     fetchDashboardSummary('day')
-    api.get<any>('/dashboard/summary?period=week').then(setWeekData).catch(() => {})
   }, []) // eslint-disable-line
 
-  const entries = recentEntries.filter(e => {
-    if (tab === 'today') return isToday(e.start_time)
-    if (tab === 'week')  return isThisWeek(e.start_time)
-    if (tab === 'month') return isThisMonth(e.start_time)
-    return true
-  })
-
-  const todaySec    = dashboardSummary?.totals?.total_time    ?? 0
-  const billableSec = dashboardSummary?.totals?.billable_time ?? 0
-  const nEntries    = dashboardSummary?.totals?.total_entries ?? 0
-  const goalPct     = Math.min(todaySec / (8 * 3600), 1)
-  const weekTotal   = weekData?.totals?.total_time    ?? 0
-  const weekBill    = weekData?.totals?.billable_time ?? 0
-  const weekBars    = weekData?.daily_breakdown ?? []
-  const projBreak   = dashboardSummary?.project_breakdown ?? []
-
-  const handleStart = async () => {
-    try { await startTimer({ project_id: selectedProject?.id, description: description.trim() || undefined }) } catch {}
-  }
-  const handleStop = async () => {
-    try { await stopTimer() } catch {}
-  }
-
   return (
-    <div className="space-y-3">
+    <>
+      {/* Bento grid */}
+      <div className="grid grid-cols-12 gap-3 lg:gap-4 auto-rows-min max-w-[1600px] mx-auto">
 
-      {/* ── Row 1 ── */}
-      <div className="grid grid-cols-12 gap-3">
-
-        {/* Time entries (wide) */}
-        <div className="col-span-7 bg-[#252525] border border-[#2e2e2e] rounded-3xl p-5 flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-sm font-semibold text-[#e5e7eb]">Time Entries</h2>
-              <p className="text-xs text-[#555] mt-0.5">{entries.length} entries</p>
-            </div>
-            <div className="flex gap-1">
-              {(['today', 'week', 'month', 'all'] as const).map(p => (
-                <button key={p} onClick={() => setTab(p)}
-                  className={`tag capitalize ${tab === p ? 'bg-[#b0c4b1]/15 text-[#b0c4b1]' : 'bg-[#2e2e2e] text-[#555] hover:text-[#9ca3af]'}`}
-                >{p}</button>
-              ))}
-            </div>
-          </div>
-
-          {/* List */}
-          <div className="flex-1 overflow-y-auto space-y-1.5 max-h-56 pr-1">
-            {isLoadingEntries
-              ? [...Array(4)].map((_, i) => <div key={i} className="h-11 bg-[#2a2a2a] rounded-2xl animate-pulse" />)
-              : entries.length === 0
-              ? (
-                <div className="flex flex-col items-center justify-center py-10 gap-2">
-                  <div className="w-8 h-8 bg-[#2a2a2a] rounded-full flex items-center justify-center text-[#555] text-sm">○</div>
-                  <p className="text-xs text-[#555]">No entries for this period</p>
-                </div>
-              )
-              : entries.map(entry => (
-                <div key={entry.id}
-                  className="flex items-center gap-3 px-3.5 py-2.5 bg-[#2a2a2a] hover:bg-[#303030] rounded-2xl transition-colors group cursor-default"
-                >
-                  <div className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: (entry as any).project?.color || '#b0c4b1' }} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-[#e5e7eb] truncate leading-none">
-                      {entry.description || (entry as any).project?.name || 'No description'}
-                    </p>
-                    <p className="text-xs text-[#555] mt-0.5 truncate">
-                      {(entry as any).project?.name || '—'} · {fmtClock(entry.start_time)}
-                    </p>
-                  </div>
-                  <span className="text-xs font-mono text-[#9ca3af] tabular-nums">{fmtTime(entry.duration)}</span>
-                  {entry.is_billable && (
-                    <span className="text-[10px] text-[#b0c4b1] bg-[#b0c4b1]/10 px-1.5 py-0.5 rounded-md">$</span>
-                  )}
-                </div>
-              ))
-            }
-          </div>
+        {/* Row 1 */}
+        <div className="col-span-12 lg:col-span-3 flex flex-col gap-3 lg:gap-4" style={{ minHeight: '420px' }}>
+          <QuickActions />
         </div>
 
-        {/* Timer panel */}
-        <div className="col-span-5 bg-[#252525] border border-[#2e2e2e] rounded-3xl p-5 flex flex-col">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h2 className="text-sm font-semibold text-[#e5e7eb]">Timer</h2>
-              <p className="text-xs text-[#555] mt-0.5">
-                {isRunning ? `Running · ${currentTimer?.project?.name || 'No project'}` : 'Ready'}
-              </p>
-            </div>
-            <Toggle on={isRunning} />
-          </div>
-
-          {/* Arc gauge */}
-          <div className="flex flex-col items-center my-2">
-            <ArcGauge pct={goalPct} />
-            <div className="-mt-2 text-center">
-              <p className="text-2xl font-bold text-[#e5e7eb] tracking-tight leading-none">
-                {isRunning ? elapsed : fmtTime(todaySec)}
-              </p>
-              <p className="text-xs text-[#555] mt-1">
-                {isRunning ? 'elapsed' : `${Math.round(goalPct * 100)}% of daily goal`}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex-1 space-y-2.5 mt-2">
-            <div>
-              <label className="block text-xs text-[#555] mb-1">Project</label>
-              <div className="relative">
-                {selectedProject && (
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full z-10"
-                    style={{ backgroundColor: selectedProject.color || '#b0c4b1' }} />
-                )}
-                <select
-                  value={selectedProject?.id ?? ''}
-                  onChange={e => setSelectedProject(projects.find(p => String(p.id) === e.target.value) ?? null)}
-                  className={`input-dark pr-3 ${selectedProject ? 'pl-7' : 'pl-3'}`}
-                >
-                  <option value="">Select project…</option>
-                  {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs text-[#555] mb-1">Description</label>
-              <input type="text" value={description} onChange={e => updateDescription(e.target.value)}
-                placeholder="What are you working on?" className="input-dark" />
-            </div>
-
-            {isRunning ? (
-              <div className="flex gap-2 pt-1">
-                <div className="flex-1 bg-[#b0c4b1]/8 border border-[#b0c4b1]/20 rounded-xl px-3 py-2 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-[#b0c4b1] rounded-full animate-pulse" />
-                  <span className="font-mono text-[#b0c4b1] text-sm font-semibold">{elapsed}</span>
-                </div>
-                <button onClick={handleStop} disabled={isStopping}
-                  className="px-4 py-2 bg-[#3a2222] hover:bg-[#4a2a2a] border border-[#6b3030] text-[#e87070] text-sm font-semibold rounded-xl disabled:opacity-40 transition-colors">
-                  {isStopping ? '…' : 'Stop'}
-                </button>
-              </div>
-            ) : (
-              <button onClick={handleStart} disabled={isStarting}
-                className="w-full py-2.5 btn-accent text-sm">
-                {isStarting ? 'Starting…' : '▶  Start Timer'}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Row 2 ── */}
-      <div className="grid grid-cols-12 gap-3">
-
-        {/* Today card */}
-        <div className="col-span-3 bg-[#252525] border border-[#2e2e2e] rounded-3xl p-5 flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-[#e5e7eb]">Today</h3>
-            <Toggle on={isRunning} />
-          </div>
-          <div className="flex-1 space-y-2">
-            <div>
-              <span className="text-xs text-[#555]">Total</span>
-              <p className="text-2xl font-bold text-[#e5e7eb] leading-tight">{fmtTime(todaySec)}</p>
-            </div>
-            <div>
-              <span className="text-xs text-[#555]">Billable</span>
-              <p className="text-sm font-semibold text-[#b0c4b1]">{fmtTime(billableSec)}</p>
-            </div>
-            <p className="text-xs text-[#555]">{nEntries} {nEntries === 1 ? 'entry' : 'entries'}</p>
-          </div>
-          <button onClick={isRunning ? handleStop : handleStart} disabled={isStarting || isStopping}
-            className={`mt-4 w-full py-2 rounded-2xl text-xs font-semibold transition-colors disabled:opacity-40 ${
-              isRunning
-                ? 'bg-[#3a2222] border border-[#6b3030] text-[#e87070] hover:bg-[#4a2a2a]'
-                : 'btn-accent'
-            }`}
-          >
-            {isRunning ? 'Stop' : 'Start'}
-          </button>
+        <div className="col-span-12 lg:col-span-5" style={{ minHeight: '420px' }}>
+          <TimerCard />
         </div>
 
-        {/* Weekly chart */}
-        <div className="col-span-3 bg-[#252525] border border-[#2e2e2e] rounded-3xl p-5 flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-[#e5e7eb]">This Week</h3>
-            <Donut val={weekBill} total={weekTotal} label="billable" />
-          </div>
-          <div className="flex-1">
-            <WeekBars data={weekBars} />
-          </div>
-          <div className="mt-3 pt-3 border-t border-[#2e2e2e]">
-            <p className="text-lg font-bold text-[#e5e7eb]">{fmtTime(weekTotal)}</p>
-            <p className="text-xs text-[#555]">{fmtTime(weekBill)} billable</p>
-          </div>
+        <div className="col-span-12 lg:col-span-4 flex flex-col gap-3 lg:gap-4">
+          <DailySummary />
+          <WeekStats />
         </div>
 
-        {/* Projects (wide) */}
-        <div className="col-span-6 bg-[#252525] border border-[#2e2e2e] rounded-3xl p-5 flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-sm font-semibold text-[#e5e7eb]">Projects</h3>
-              <p className="text-xs text-[#555] mt-0.5">{projects.length} active</p>
-            </div>
-            <a href="/app/projects" className="text-xs text-[#b0c4b1] hover:text-[#c4d5c5] transition-colors">All →</a>
-          </div>
+        {/* Row 2 */}
+        <div className="col-span-12 lg:col-span-7" style={{ minHeight: '360px' }}>
+          <ProjectsGrid />
+        </div>
 
-          {projects.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-3 py-4">
-              <div className="w-12 h-12 bg-[#2a2a2a] rounded-2xl flex items-center justify-center text-[#444] text-xl">+</div>
-              <p className="text-sm text-[#555]">No projects yet</p>
-            </div>
-          ) : (
-            <div className="flex-1 grid grid-cols-2 gap-2">
-              {projects.slice(0, 4).map(p => {
-                const pb = projBreak.find((x: any) => x.project?.id === p.id || x.project?.name === p.name)
-                const pct = pb?.percentage ?? 0
-                return (
-                  <button key={p.id}
-                    onClick={() => { setSelectedProject(p); if (!isRunning) handleStart() }}
-                    className="flex items-start gap-3 bg-[#2a2a2a] hover:bg-[#303030] border border-[#333] hover:border-[#b0c4b1]/30 rounded-2xl px-3.5 py-3 transition-all text-left group"
-                  >
-                    <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5"
-                      style={{ backgroundColor: p.color || '#b0c4b1' }} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-[#e5e7eb] font-medium truncate">{p.name}</p>
-                      <p className="text-xs text-[#555] capitalize mt-0.5">{p.status?.toLowerCase() || 'active'}</p>
-                      {pct > 0 && (
-                        <div className="mt-1.5 h-0.5 bg-[#333] rounded-full overflow-hidden">
-                          <div className="h-full bg-[#b0c4b1] rounded-full" style={{ width: `${pct}%` }} />
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-[#b0c4b1] text-xs opacity-0 group-hover:opacity-100 transition-opacity">▶</span>
-                  </button>
-                )
-              })}
-            </div>
-          )}
+        <div className="col-span-12 lg:col-span-5" style={{ minHeight: '360px' }}>
+          <TimeEntries />
         </div>
 
       </div>
-    </div>
+
+      {/* Floating action button */}
+      <button
+        onClick={() => { if (!isRunning) startTimer().catch(() => {}) }}
+        className="fixed bottom-6 right-6 h-12 px-5 flex items-center justify-center gap-2 rounded-full
+                   bg-primary text-primary-foreground font-medium glow-primary glow-primary-hover
+                   transition-all duration-300 hover:-translate-y-1 active:scale-95 z-50 text-sm"
+      >
+        <Plus size={18} />
+        New Timer
+      </button>
+    </>
   )
 }
