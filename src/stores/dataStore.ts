@@ -73,7 +73,8 @@ export const useDataStore = create<DataStore>()(
         try {
           set({ isLoadingEntries: true, error: null })
 
-          const entries = await api.get<TimeEntry[]>(`/time-entries?limit=${limit}&sort=-created_at`)
+          const response = await api.get<{ entries: TimeEntry[] } | TimeEntry[]>(`/time-entries?limit=${limit}&sort=-created_at`)
+          const entries = Array.isArray(response) ? response : (response as any).entries ?? []
 
           set({
             recentEntries: entries,
