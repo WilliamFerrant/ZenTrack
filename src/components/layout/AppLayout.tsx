@@ -28,7 +28,7 @@ export function AppLayout({ children, title, showSidebar = false }: AppLayoutPro
   }, [isAuthenticated, initializeApp])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#0c0c0e]">
       {/* Global Header */}
       <Header />
 

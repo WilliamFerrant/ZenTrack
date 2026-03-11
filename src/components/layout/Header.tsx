@@ -16,14 +16,12 @@ export function Header() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
-  // Close user menu on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setUserMenuOpen(false)
       }
     }
-
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
@@ -37,124 +35,86 @@ export function Header() {
     }
   }
 
-  const navigationItems = [
-    {
-      name: 'Tracking',
-      href: '/app/tracking',
-      current: pathname === '/app/tracking',
-    },
-    {
-      name: 'Dashboard',
-      href: '/app/dashboard',
-      current: pathname === '/app/dashboard',
-    },
+  const navItems = [
+    { name: 'Dashboard', href: '/app/dashboard' },
+    { name: 'Tracking',  href: '/app/tracking' },
+    { name: 'Projects',  href: '/app/projects' },
+    { name: 'Reports',   href: '/app/reports' },
   ]
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
+    <header className="bg-[#0c0c0e] border-b border-gray-800 sticky top-0 z-40">
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo and Brand */}
-          <div className="flex items-center">
-            <Link href="/app/tracking" className="flex-shrink-0">
-              <h1 className="text-xl font-bold text-blue-600">
-                Zentracker
-              </h1>
-            </Link>
-          </div>
+        <div className="flex items-center h-14 gap-6">
+          <Link href="/app/dashboard" className="flex items-center gap-2 flex-shrink-0">
+            <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <span className="text-white text-xs font-bold">Z</span>
+            </div>
+            <span className="text-white font-semibold text-sm tracking-tight">ZenTrack</span>
+          </Link>
 
-          {/* Main Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            {navigationItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`
-                  px-3 py-2 rounded-md text-sm font-medium transition-colors
-                  ${item.current
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
-                  }
-                `}
-              >
-                {item.name}
-              </Link>
-            ))}
+          <nav className="hidden md:flex items-center gap-1 flex-1">
+            {navItems.map(item => {
+              const active = pathname === item.href || pathname.startsWith(item.href + '/')
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    active ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800/60'
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              )
+            })}
           </nav>
 
-          {/* Timer Status and User Menu */}
-          <div className="flex items-center space-x-4">
-            {/* Timer Indicator */}
+          <div className="flex items-center gap-3 ml-auto">
             {isRunning && currentTimer && (
-              <div className="hidden sm:flex items-center space-x-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
-                <span className="font-mono">{elapsedTime}</span>
-                <span className="text-green-600">
-                  {currentTimer.project?.name || 'No project'}
-                </span>
-              </div>
+              <Link
+                href="/app/tracking"
+                className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-green-950 border border-green-800 text-green-400 rounded-full text-xs font-mono hover:bg-green-900 transition-colors"
+              >
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                {elapsedTime}
+              </Link>
             )}
 
-            {/* Mobile Menu Button */}
-            <button className="md:hidden p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100">
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-
-            {/* User Menu */}
             <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center space-x-2 p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-800 transition-colors"
               >
-                {/* User Avatar */}
-                <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
+                <div className="w-7 h-7 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs font-semibold">
                   {user?.first_name?.[0]?.toUpperCase() || 'U'}
                 </div>
-                <span className="hidden sm:block text-sm font-medium">
+                <span className="hidden sm:block text-sm text-gray-300 font-medium">
                   {user?.first_name || 'User'}
                 </span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
-              {/* Dropdown Menu */}
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                <div className="absolute right-0 mt-1 w-48 bg-gray-900 border border-gray-800 rounded-xl shadow-xl z-50 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-gray-800">
+                    <p className="text-sm font-medium text-white">{user?.first_name} {user?.last_name}</p>
+                    <p className="text-xs text-gray-500 truncate mt-0.5">{user?.email}</p>
+                  </div>
                   <div className="py-1">
-                    {/* User Info */}
-                    <div className="px-4 py-2 border-b border-gray-100">
-                      <p className="text-sm font-medium text-gray-900">
-                        {user?.first_name} {user?.last_name}
-                      </p>
-                      <p className="text-sm text-gray-500 truncate">
-                        {user?.email}
-                      </p>
-                    </div>
-
-                    {/* Menu Items */}
                     <Link
                       href="/app/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="block px-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
                       onClick={() => setUserMenuOpen(false)}
                     >
-                      Profile Settings
+                      Profile
                     </Link>
-
-                    <Link
-                      href="/app/organization"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      onClick={() => setUserMenuOpen(false)}
-                    >
-                      Organization
-                    </Link>
-
                     <button
                       onClick={handleLogout}
                       disabled={isLoggingOut}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 transition-colors disabled:opacity-50"
                     >
                       {isLoggingOut ? 'Signing out...' : 'Sign out'}
                     </button>
@@ -164,45 +124,6 @@ export function Header() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Mobile Navigation Menu */}
-      <div className="md:hidden">
-        {/* Mobile timer indicator */}
-        {isRunning && currentTimer && (
-          <div className="px-4 py-2 bg-green-50 border-b border-green-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
-                <span className="text-sm text-green-800 font-mono">{elapsedTime}</span>
-              </div>
-              <span className="text-sm text-green-600 truncate">
-                {currentTimer.project?.name || 'No project'}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Mobile Navigation Links */}
-        <nav className="bg-gray-50 border-t border-gray-200">
-          <div className="px-4 py-2 space-y-1">
-            {navigationItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`
-                  block px-3 py-2 rounded-md text-sm font-medium
-                  ${item.current
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
-                  }
-                `}
-              >
-                {item.name}
-              </Link>
-            ))}
-          </div>
-        </nav>
       </div>
     </header>
   )
