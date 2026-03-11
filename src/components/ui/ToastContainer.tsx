@@ -35,7 +35,7 @@ function ToastItem({ toast, onClose }: ToastItemProps) {
   }, [toast.duration, onClose])
 
   const getToastStyles = () => {
-    const base = 'max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5'
+    const base = 'max-w-sm w-full bg-[#252525] border border-[#333] shadow-2xl rounded-2xl pointer-events-auto'
 
     switch (toast.type) {
       case 'success':
@@ -77,11 +77,11 @@ function ToastItem({ toast, onClose }: ToastItemProps) {
 
           {/* Content */}
           <div className="ml-3 w-0 flex-1 pt-0.5">
-            <p className="text-sm font-medium text-gray-900">
+            <p className="text-sm font-medium text-[#e5e7eb]">
               {toast.title}
             </p>
             {toast.description && (
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-[#6b7280]">
                 {toast.description}
               </p>
             )}

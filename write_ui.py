@@ -1,4 +1,255 @@
-// Dashboard page — modern bento layout
+import pathlib
+
+root = pathlib.Path(r"c:\web dev\time-tracker")
+
+# ─── tailwind.config.js ── add custom palette ────────────────────────────────
+tw = r"""/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        surface: {
+          DEFAULT: '#1f1f1f',
+          card:    '#272727',
+          hover:   '#2e2e2e',
+          border:  '#333333',
+        },
+        accent: {
+          DEFAULT: '#b0c4b1',
+          hover:   '#c4d5c5',
+          muted:   '#728c74',
+        },
+        text: {
+          primary:   '#e5e7eb',
+          secondary: '#9ca3af',
+          muted:     '#6b7280',
+        },
+      },
+      borderRadius: {
+        '2xl': '1rem',
+        '3xl': '1.25rem',
+      },
+    },
+  },
+  plugins: [],
+}
+"""
+(root / "tailwind.config.js").write_text(tw, encoding="utf-8")
+print("tailwind.config.js written")
+
+# ─── globals.css ─────────────────────────────────────────────────────────────
+css = """@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: #1f1f1f;
+    color: #e5e7eb;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #333 transparent;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-[#272727] border border-[#333] rounded-3xl;
+  }
+  .btn-accent {
+    @apply bg-[#b0c4b1] hover:bg-[#c4d5c5] text-[#1f1f1f] font-semibold rounded-2xl transition-colors disabled:opacity-40;
+  }
+  .btn-ghost {
+    @apply bg-[#2e2e2e] hover:bg-[#363636] text-[#e5e7eb] font-medium rounded-2xl transition-colors;
+  }
+  .input-dark {
+    @apply w-full bg-[#2e2e2e] border border-[#3a3a3a] text-[#e5e7eb] placeholder-[#555] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#b0c4b1] transition-colors;
+  }
+  .tag {
+    @apply px-2.5 py-1 rounded-lg text-xs font-medium transition-colors;
+  }
+}
+"""
+(root / "src/app/globals.css").write_text(css, encoding="utf-8")
+print("globals.css written")
+
+# ─── Header.tsx ──────────────────────────────────────────────────────────────
+header = r"""// Main navigation header
+'use client'
+
+import { useState, useRef, useEffect } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
+import { useAuthStore, useTimerStore, useFormattedElapsedTime } from '@/stores'
+
+export function Header() {
+  const router = useRouter()
+  const pathname = usePathname()
+  const { user, logout, isLoggingOut } = useAuthStore()
+  const { isRunning, currentTimer } = useTimerStore()
+  const elapsedTime = useFormattedElapsedTime()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', fn)
+    return () => document.removeEventListener('mousedown', fn)
+  }, [])
+
+  const handleLogout = async () => {
+    try { await logout(); router.push('/login') } catch {}
+  }
+
+  const nav = [
+    { label: 'Dashboard', href: '/app/dashboard' },
+    { label: 'Tracking',  href: '/app/tracking' },
+    { label: 'Projects',  href: '/app/projects' },
+    { label: 'Reports',   href: '/app/reports' },
+  ]
+
+  return (
+    <header className="bg-[#1a1a1a] border-b border-[#2a2a2a] sticky top-0 z-40">
+      <div className="mx-auto px-6 lg:px-8">
+        <div className="flex items-center h-14 gap-4">
+
+          {/* Logo */}
+          <Link href="/app/dashboard" className="flex items-center gap-2.5 flex-shrink-0 mr-2">
+            <div className="w-7 h-7 bg-[#b0c4b1] rounded-xl flex items-center justify-center">
+              <svg className="w-3.5 h-3.5 text-[#1f1f1f]" fill="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm0 18a8 8 0 110-16 8 8 0 010 16z" opacity=".3"/>
+              </svg>
+            </div>
+            <span className="text-[#e5e7eb] font-semibold text-sm tracking-tight">ZenTrack</span>
+          </Link>
+
+          {/* Nav pills */}
+          <nav className="hidden md:flex items-center gap-0.5 flex-1">
+            {nav.map(item => {
+              const active = pathname === item.href || pathname.startsWith(item.href + '/')
+              return (
+                <Link key={item.label} href={item.href}
+                  className={`px-3.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                    active
+                      ? 'bg-[#b0c4b1]/15 text-[#b0c4b1]'
+                      : 'text-[#6b7280] hover:text-[#e5e7eb] hover:bg-[#2a2a2a]'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              )
+            })}
+          </nav>
+
+          <div className="flex items-center gap-2.5 ml-auto">
+            {/* Live timer chip */}
+            {isRunning && currentTimer && (
+              <Link href="/app/tracking"
+                className="flex items-center gap-2 px-3 py-1.5 bg-[#b0c4b1]/10 border border-[#b0c4b1]/25 text-[#b0c4b1] rounded-full text-xs font-mono hover:bg-[#b0c4b1]/20 transition-colors"
+              >
+                <span className="w-1.5 h-1.5 bg-[#b0c4b1] rounded-full animate-pulse" />
+                {elapsedTime}
+              </Link>
+            )}
+
+            {/* Avatar / menu */}
+            <div className="relative" ref={menuRef}>
+              <button onClick={() => setMenuOpen(!menuOpen)}
+                className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-[#2a2a2a] transition-colors"
+              >
+                <div className="w-7 h-7 bg-[#b0c4b1] text-[#1f1f1f] rounded-full flex items-center justify-center text-xs font-bold">
+                  {user?.first_name?.[0]?.toUpperCase() || 'U'}
+                </div>
+                <span className="hidden sm:block text-sm text-[#9ca3af] font-medium">
+                  {user?.first_name || 'User'}
+                </span>
+                <svg className="w-3 h-3 text-[#555]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {menuOpen && (
+                <div className="absolute right-0 mt-2 w-44 bg-[#222] border border-[#333] rounded-2xl shadow-2xl z-50 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-[#2e2e2e]">
+                    <p className="text-sm font-semibold text-[#e5e7eb]">{user?.first_name} {user?.last_name}</p>
+                    <p className="text-xs text-[#555] truncate mt-0.5">{user?.email}</p>
+                  </div>
+                  <div className="py-1.5">
+                    <Link href="/app/profile"
+                      className="block px-4 py-2 text-sm text-[#9ca3af] hover:text-[#e5e7eb] hover:bg-[#2a2a2a] transition-colors"
+                      onClick={() => setMenuOpen(false)}
+                    >Profile</Link>
+                    <button onClick={handleLogout} disabled={isLoggingOut}
+                      className="block w-full text-left px-4 py-2 text-sm text-[#9ca3af] hover:text-[#e5e7eb] hover:bg-[#2a2a2a] transition-colors disabled:opacity-40"
+                    >{isLoggingOut ? 'Signing out…' : 'Sign out'}</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+  )
+}
+"""
+(root / "src/components/layout/Header.tsx").write_text(header, encoding="utf-8")
+print("Header.tsx written")
+
+# ─── AppLayout.tsx ─────────────────────────────────────────────────────────────
+layout = r"""// Main application layout
+'use client'
+
+import { ReactNode, useEffect } from 'react'
+import { Header } from './Header'
+import { ToastContainer } from '../ui/ToastContainer'
+import { ModalContainer } from '../ui/ModalContainer'
+import { NetworkStatusIndicator } from '../ui/NetworkStatusIndicator'
+import { useAppInitialization } from '@/stores'
+
+export interface AppLayoutProps {
+  children: ReactNode
+  title?: string
+  showSidebar?: boolean
+}
+
+export function AppLayout({ children }: AppLayoutProps) {
+  const { isAuthenticated, initializeApp } = useAppInitialization()
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      initializeApp().catch(console.error)
+    }
+  }, [isAuthenticated, initializeApp])
+
+  return (
+    <div className="min-h-screen bg-[#1f1f1f]">
+      <Header />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {children}
+      </main>
+      <ToastContainer />
+      <ModalContainer />
+      <NetworkStatusIndicator />
+    </div>
+  )
+}
+"""
+(root / "src/components/layout/AppLayout.tsx").write_text(layout, encoding="utf-8")
+print("AppLayout.tsx written")
+
+# ─── dashboard/page.tsx ────────────────────────────────────────────────────────
+dashboard = r"""// Dashboard page — modern bento layout
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -376,3 +627,7 @@ export default function DashboardPage() {
     </div>
   )
 }
+"""
+(root / "src/app/app/dashboard/page.tsx").write_text(dashboard, encoding="utf-8")
+print("dashboard/page.tsx written")
+print("All done!")

@@ -36,7 +36,7 @@ export function ModalContainer() {
           {/* Background overlay */}
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div
-              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
               aria-hidden="true"
               onClick={() => hideModal(modal.id)}
             />
@@ -49,15 +49,15 @@ export function ModalContainer() {
               &#8203;
             </span>
 
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div className="inline-block align-bottom bg-[#252525] border border-[#333] rounded-3xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
               {/* Modal Header */}
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
+                <h3 className="text-lg font-medium text-[#e5e7eb]">
                   {modal.title}
                 </h3>
                 <button
                   onClick={() => hideModal(modal.id)}
-                  className="text-gray-400 hover:text-gray-500 focus:outline-none focus:text-gray-500"
+                  className="text-[#555] hover:text-[#9ca3af] focus:outline-none"
                 >
                   <span className="sr-only">Close</span>
                   <XMarkIcon className="w-6 h-6" />
@@ -73,7 +73,7 @@ export function ModalContainer() {
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={() => hideModal(modal.id)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="px-4 py-2 text-sm font-medium text-[#e5e7eb] bg-[#2e2e2e] border border-[#3a3a3a] rounded-xl hover:bg-[#363636] focus:outline-none transition-colors"
                 >
                   {modal.cancelText || 'Cancel'}
                 </button>
@@ -83,7 +83,7 @@ export function ModalContainer() {
                       modal.onConfirm?.()
                       hideModal(modal.id)
                     }}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="px-4 py-2 text-sm font-medium text-[#1f1f1f] bg-[#b0c4b1] border border-transparent rounded-xl hover:bg-[#c4d5c5] focus:outline-none transition-colors"
                   >
                     {modal.confirmText || 'Confirm'}
                   </button>

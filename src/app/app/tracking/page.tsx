@@ -7,23 +7,21 @@ import { RecentEntries } from '@/components/timer/RecentEntries'
 
 export default function TrackingPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Time Tracking</h1>
-        <p className="mt-1 text-sm text-gray-600">
-          Track your time efficiently with our intuitive timer
-        </p>
+        <h1 className="text-xl font-semibold text-[#e5e7eb]">Time Tracking</h1>
+        <p className="mt-0.5 text-sm text-[#6b7280]">Track your time with precision</p>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-[#252525] border border-[#2e2e2e] rounded-3xl p-6">
         <div className="text-center space-y-6">
           <TimerDisplay />
           <TimerControls />
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Entries</h2>
+      <div className="bg-[#252525] border border-[#2e2e2e] rounded-3xl p-6">
+        <h2 className="text-sm font-semibold text-[#e5e7eb] mb-4">Recent Entries</h2>
         <RecentEntries />
       </div>
     </div>
