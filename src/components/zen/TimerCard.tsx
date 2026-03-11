@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback } from 'react'
-import { Play, Pause, Square } from 'lucide-react'
 import { useTimerStore, useDataStore } from '@/stores'
 
 interface CircularProgressProps {
@@ -90,95 +89,100 @@ export default function TimerCard() {
   }, [stopTimer])
 
   return (
-    <div className="bento-card p-5 lg:p-6 flex flex-col items-center gap-5 animate-fade-in" style={{ animationDelay: '50ms' }}>
-      {/* Project chip row */}
-      <div className="w-full flex items-center justify-between">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Timer</p>
-        {selectedProject && (
-          <button
-            onClick={() => setSelectedProject(null)}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors hover:opacity-80"
-            style={{ background: 'hsl(var(--primary) / 0.1)', color: 'hsl(var(--primary))' }}
-          >
-            <span
-              className="w-1.5 h-1.5 rounded-full"
-              style={{ backgroundColor: selectedProject.color }}
-            />
-            {selectedProject.name}
-            <span className="opacity-50 ml-0.5">×</span>
-          </button>
-        )}
+    <div className="bento-card p-6 lg:p-8 flex flex-col items-center justify-center text-center gap-5 animate-fade-in h-full" style={{ animationDelay: '50ms' }}>
+
+      {/* Header */}
+      <div>
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Live Timer</p>
+        <p className="text-[10px] text-muted-foreground/60 mt-1">
+          {isRunning ? 'Session active' : 'Ready to focus'}
+        </p>
       </div>
 
-      {/* Ring + time */}
+      {/* Ring with large button inside */}
       <div className="relative">
         <CircularProgress percentage={percentage} size={200} strokeWidth={12} animate={isRunning} />
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-          <p className="text-4xl font-light tabular-time text-foreground select-none">
-            {formatTime(elapsedTime)}
-          </p>
-          <button
-            onClick={toggleTimer}
-            disabled={isStarting || isStopping}
-            className="w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 disabled:opacity-40 glow-primary-hover"
-            style={{
-              background: isRunning ? 'hsl(var(--primary) / 0.2)' : 'hsl(var(--primary))',
-              color: isRunning ? 'hsl(var(--primary))' : 'hsl(var(--primary-foreground))',
-            }}
+        {/* Clickable area fills the inside of the ring */}
+        <button
+          onClick={toggleTimer}
+          disabled={isStarting || isStopping}
+          className={`absolute inset-0 flex items-center justify-center rounded-full m-[18px] transition-all duration-300 disabled:opacity-40 ${
+            isRunning ? 'bg-primary/8 hover:bg-primary/15' : 'bg-muted/8 hover:bg-primary/8'
+          }`}
+          aria-label={isRunning ? 'Pause timer' : 'Start timer'}
+        >
+          <div
+            className="bg-primary rounded-full p-5 text-primary-foreground transition-all duration-200 hover:scale-105 active:scale-95 glow-primary"
           >
-            {isRunning
-              ? <Pause size={18} strokeWidth={2} />
-              : <Play  size={18} strokeWidth={2} fill="currentColor" />
-            }
-          </button>
-        </div>
+            {isRunning ? (
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="4" width="4" height="16" rx="1" />
+                <rect x="14" y="4" width="4" height="16" rx="1" />
+              </svg>
+            ) : (
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5.14v14l11-7-11-7z" />
+              </svg>
+            )}
+          </div>
+        </button>
       </div>
 
-      {/* Task name input */}
+      {/* Time — below ring */}
+      <p className="tabular-time text-5xl lg:text-6xl font-extralight tracking-tighter text-foreground select-none">
+        {formatTime(elapsedTime)}
+      </p>
+
+      {/* Task input */}
       <input
         type="text"
         value={description}
         onChange={e => updateDescription(e.target.value)}
         onKeyDown={e => { if (e.key === 'Enter' && !isRunning && !isStarting) toggleTimer() }}
         placeholder="What are you working on?"
-        className="w-full bg-transparent text-center text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none border-b pb-1 transition-colors"
-        style={{ borderColor: 'hsl(0 0% 100% / 0.06)' }}
+        className="bg-transparent text-base font-light text-center w-full max-w-xs focus:outline-none placeholder:text-muted-foreground/40 text-foreground border-b pb-2 transition-colors"
+        style={{ borderColor: 'hsl(0 0% 100% / 0.5)' }}
         onFocus={e => (e.currentTarget.style.borderColor = 'hsl(var(--primary) / 0.4)')}
-        onBlur={e => (e.currentTarget.style.borderColor = 'hsl(0 0% 100% / 0.06)')}
+        onBlur={e => (e.currentTarget.style.borderColor = 'hsl(0 0% 100% / 0.5)')}
       />
 
-      {/* Bottom row */}
-      <div className="w-full flex items-center justify-between">
-        {/* Project selector */}
-        <div className="flex-1 min-w-0">
-          {!selectedProject ? (
-            <select
-              value=""
-              onChange={e => {
-                const p = projects.find(x => String(x.id) === e.target.value)
-                if (p) setSelectedProject(p)
-              }}
-              className="text-xs text-muted-foreground bg-transparent focus:outline-none cursor-pointer appearance-none truncate max-w-full"
-            >
-              <option value="" disabled>No project</option>
-              {projects.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-          ) : (
-            <span className="text-xs text-muted-foreground truncate">{selectedProject.name}</span>
-          )}
-        </div>
-
-        {/* End session */}
+      {/* Project chip + end session */}
+      <div className="flex items-center gap-3">
+        {selectedProject ? (
+          <button
+            onClick={() => setSelectedProject(null)}
+            className="text-[11px] font-medium px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-opacity hover:opacity-80"
+            style={{ background: 'hsl(var(--primary) / 0.12)', color: 'hsl(var(--primary))' }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: selectedProject.color }} />
+            {selectedProject.name}
+          </button>
+        ) : (
+          <select
+            value=""
+            onChange={e => {
+              const p = projects.find(x => String(x.id) === e.target.value)
+              if (p) setSelectedProject(p)
+            }}
+            className="text-[11px] font-medium px-3 py-1.5 rounded-full focus:outline-none cursor-pointer appearance-none"
+            style={{ background: 'hsl(var(--primary) / 0.12)', color: 'hsl(var(--primary))' }}
+          >
+            <option value="" disabled>Select project</option>
+            {projects.map(p => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        )}
         {isRunning && (
           <button
             onClick={endSession}
             disabled={isStopping}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40"
+            className="text-[11px] font-medium px-4 py-1.5 rounded-full transition-colors active:scale-95 disabled:opacity-40"
+            style={{ background: 'hsl(var(--muted) / 0.15)', color: 'hsl(var(--muted-foreground))' }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'hsl(var(--muted) / 0.25)'}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'hsl(var(--muted) / 0.15)'}
           >
-            <Square size={12} fill="currentColor" />
-            End session
+            End Session
           </button>
         )}
       </div>
