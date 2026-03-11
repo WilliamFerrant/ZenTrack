@@ -33,7 +33,6 @@
     --ring: 166 18% 70%;
 
     --radius: 1.25rem;
-
     --glow: 166 28% 62%;
     --card-sage: 166 20% 82%;
 
@@ -49,10 +48,7 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-    box-sizing: border-box;
-  }
+  *, *::before, *::after { box-sizing: border-box; }
 
   body {
     @apply bg-background text-foreground antialiased;
@@ -61,53 +57,49 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  h1, h2, h3 {
-    text-wrap: balance;
-  }
-
-  p, span {
-    text-wrap: pretty;
-  }
-
   * {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--muted)) transparent;
+    scrollbar-color: hsl(var(--muted) / 0.4) transparent;
   }
 }
 
 @layer components {
+  /* ── Bento cards ───────────────────────────────────────────────────── */
   .bento-card {
-    @apply rounded-3xl border border-border;
-    background: hsl(var(--card) / 0.65);
-    backdrop-filter: blur(40px) saturate(1.4);
+    @apply rounded-3xl;
+    background: hsl(var(--card) / 0.7);
+    border: 1px solid hsl(0 0% 100% / 0.055);
+    backdrop-filter: blur(48px) saturate(1.3);
     box-shadow:
-      0 0 0 1px hsl(0 0% 100% / 0.04),
+      0 0 0 1px hsl(0 0% 100% / 0.035),
       inset 0 1px 0 0 hsl(0 0% 100% / 0.04),
-      0 8px 40px -12px rgba(0, 0, 0, 0.5);
+      0 8px 40px -12px rgba(0, 0, 0, 0.55);
   }
 
   .bento-card-hover {
     @apply bento-card transition-all duration-300 cursor-pointer;
   }
-
   .bento-card-hover:hover {
-    transform: translateY(-3px) scale(1.005);
+    transform: translateY(-2px) scale(1.004);
+    border-color: hsl(0 0% 100% / 0.09);
     box-shadow:
       0 0 0 1px hsl(0 0% 100% / 0.06),
       inset 0 1px 0 0 hsl(0 0% 100% / 0.06),
-      0 20px 60px -15px rgba(0, 0, 0, 0.6);
+      0 20px 60px -15px rgba(0, 0, 0, 0.65);
   }
 
   .bento-sage {
-    @apply rounded-3xl border border-border;
-    background: hsl(var(--card-sage) / 0.12);
-    backdrop-filter: blur(40px) saturate(1.4);
+    @apply rounded-3xl;
+    background: hsl(var(--card-sage) / 0.1);
+    border: 1px solid hsl(var(--primary) / 0.12);
+    backdrop-filter: blur(48px) saturate(1.4);
     box-shadow:
-      0 0 0 1px hsl(var(--primary) / 0.08),
-      inset 0 1px 0 0 hsl(var(--primary) / 0.06),
+      0 0 0 1px hsl(var(--primary) / 0.06),
+      inset 0 1px 0 0 hsl(var(--primary) / 0.05),
       0 8px 40px -12px rgba(0, 0, 0, 0.4);
   }
 
+  /* ── Utilities ─────────────────────────────────────────────────────── */
   .tabular-time {
     font-feature-settings: 'tnum';
     font-variant-numeric: tabular-nums;
@@ -116,32 +108,35 @@
   .glow-primary {
     box-shadow: 0 0 24px 0 hsl(var(--glow) / 0.22);
   }
-
   .glow-primary-hover:hover {
     box-shadow: 0 0 36px 0 hsl(var(--glow) / 0.38);
   }
 
+  /* ── Form elements ─────────────────────────────────────────────────── */
   .input-zen {
-    @apply w-full bg-white/5 border border-white/[0.06] text-foreground placeholder:text-muted-foreground
+    @apply w-full bg-white/[0.05] border text-foreground placeholder:text-muted-foreground
            rounded-xl px-3 py-2.5 text-sm outline-none transition-colors;
+    border-color: hsl(var(--border));
   }
   .input-zen:focus {
-    @apply border-primary/40;
+    border-color: hsl(var(--primary) / 0.4);
     box-shadow: 0 0 0 3px hsl(var(--primary) / 0.08);
   }
 
+  /* ── Buttons ───────────────────────────────────────────────────────── */
   .btn-primary-zen {
     @apply inline-flex items-center justify-center gap-2 rounded-2xl font-medium
            bg-primary text-primary-foreground transition-all duration-300
-           hover:-translate-y-0.5 active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none;
+           hover:-translate-y-0.5 active:scale-[0.97]
+           disabled:opacity-40 disabled:pointer-events-none;
   }
-
   .btn-ghost-zen {
     @apply inline-flex items-center justify-center gap-2 rounded-xl font-medium
            text-muted-foreground hover:text-foreground hover:bg-white/[0.06]
            transition-all duration-200 active:scale-95;
   }
 
+  /* ── Tag / pill ────────────────────────────────────────────────────── */
   .tag {
     @apply px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer;
   }

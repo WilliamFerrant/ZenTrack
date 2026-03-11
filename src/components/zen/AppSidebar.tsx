@@ -1,16 +1,16 @@
-// Icon sidebar — 72px wide, fixed left
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutDashboard, Clock, FolderOpen, BarChart2, LogOut } from 'lucide-react'
+import { LayoutDashboard, FolderOpen, Clock, BarChart2, Settings, LogOut } from 'lucide-react'
 import { useAuthStore } from '@/stores'
 
 const NAV = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/app/dashboard' },
-  { icon: Clock,           label: 'Tracking',  href: '/app/tracking'  },
   { icon: FolderOpen,      label: 'Projects',  href: '/app/projects'  },
+  { icon: Clock,           label: 'Timer',     href: '/app/tracking'  },
   { icon: BarChart2,       label: 'Reports',   href: '/app/reports'   },
+  { icon: Settings,        label: 'Settings',  href: '/app/settings'  },
 ]
 
 export default function AppSidebar() {
@@ -23,57 +23,52 @@ export default function AppSidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-[72px] z-50 flex flex-col items-center py-4 gap-2"
+    <aside
+      className="fixed left-0 top-0 h-full w-[72px] z-50 flex flex-col items-center py-4"
       style={{ background: 'hsl(var(--sidebar-background))', borderRight: '1px solid hsl(var(--sidebar-border))' }}
     >
       {/* Logo */}
       <Link href="/app/dashboard"
-        className="w-10 h-10 rounded-2xl flex items-center justify-center mb-3 transition-all hover:scale-105"
-        style={{ background: 'hsl(var(--primary))' }}
-      >
-        <svg className="w-5 h-5" style={{ color: 'hsl(var(--primary-foreground))' }} fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm0 3a1 1 0 011 1v6.586l3.707 3.707a1 1 0 01-1.414 1.414l-4-4A1 1 0 0111 13V6a1 1 0 011-1z"/>
-        </svg>
-      </Link>
+        className="w-9 h-9 rounded-2xl flex items-center justify-center mb-6 font-bold text-sm transition-all hover:scale-105 select-none"
+        style={{ background: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
+      >ZT</Link>
 
-      {/* Nav items */}
-      <nav className="flex flex-col items-center gap-1 flex-1">
+      {/* Nav — icon on top, label below, stacked */}
+      <nav className="flex flex-col items-center gap-0.5 flex-1 w-full px-2">
         {NAV.map(({ icon: Icon, label, href }) => {
           const active = pathname === href || pathname.startsWith(href + '/')
           return (
-            <Link key={href} href={href} title={label}
-              className="group relative w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-200"
+            <Link key={href} href={href}
+              className="flex flex-col items-center justify-center gap-1 w-full py-2.5 rounded-2xl transition-all duration-200 select-none"
               style={{
-                background:  active ? 'hsl(var(--primary) / 0.15)' : 'transparent',
-                color:       active ? 'hsl(var(--primary))' : 'hsl(var(--sidebar-foreground))',
+                background: active ? 'hsl(var(--primary) / 0.12)' : 'transparent',
+                color: active ? 'hsl(var(--primary))' : 'hsl(var(--sidebar-foreground))',
               }}
-              onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'hsl(var(--sidebar-accent))' }}
-              onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
             >
-              <Icon size={20} strokeWidth={active ? 2 : 1.6} />
-              {/* Tooltip */}
-              <span className="pointer-events-none absolute left-[calc(100%+10px)] top-1/2 -translate-y-1/2 whitespace-nowrap
-                               rounded-lg px-2.5 py-1.5 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity z-50"
-                style={{ background: 'hsl(var(--card))', color: 'hsl(var(--foreground))', boxShadow: '0 4px 20px rgba(0,0,0,.4)' }}
-              >{label}</span>
+              <Icon size={18} strokeWidth={active ? 2.2 : 1.6} />
+              <span style={{
+                fontSize: '9px',
+                fontWeight: active ? 600 : 400,
+                letterSpacing: '0.02em',
+                lineHeight: 1,
+              }}>{label}</span>
             </Link>
           )
         })}
       </nav>
 
-      {/* User avatar + logout */}
-      <div className="flex flex-col items-center gap-2 mt-auto">
+      {/* Footer: logout + avatar */}
+      <div className="flex flex-col items-center gap-2 mt-2">
         <button onClick={handleLogout} title="Sign out"
-          className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/[0.06]"
+          className="w-8 h-8 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
           style={{ color: 'hsl(var(--sidebar-foreground))' }}
         >
-          <LogOut size={16} strokeWidth={1.6} />
+          <LogOut size={15} strokeWidth={1.6} />
         </button>
-        <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold"
+        <div
+          className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold select-none"
           style={{ background: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
-        >
-          {user?.first_name?.[0]?.toUpperCase() || 'U'}
-        </div>
+        >{user?.first_name?.[0]?.toUpperCase() || 'U'}</div>
       </div>
     </aside>
   )

@@ -1,4 +1,3 @@
-// Time entries list
 'use client'
 
 import { useState } from 'react'
@@ -22,23 +21,35 @@ function isMonth(v: unknown) {
   const t = new Date()
   return d.getMonth() === t.getMonth() && d.getFullYear() === t.getFullYear()
 }
-function fmtTime(sec: number) {
-  if (!sec) return '0m'
+
+// HH:MM:SS like "1:10:23"
+function fmtHMS(sec: number) {
   const h = Math.floor(sec / 3600)
   const m = Math.floor((sec % 3600) / 60)
-  return h > 0 ? `${h}h ${m}m` : `${m}m`
-}
-function fmtClock(v: unknown) {
-  try { return (v instanceof Date ? v : new Date(String(v))).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) }
-  catch { return '' }
+  const s = sec % 60
+  return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
-const TABS: { id: Period; label: string }[] = [
+function fmtClock(v: unknown) {
+  try {
+    return (v instanceof Date ? v : new Date(String(v)))
+      .toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+  } catch { return '' }
+}
+
+const TAB_LABELS: { id: Period; label: string }[] = [
   { id: 'today', label: 'Today' },
   { id: 'week',  label: 'Week'  },
   { id: 'month', label: 'Month' },
   { id: 'all',   label: 'All'   },
 ]
+
+const HEADER_LABELS: Record<Period, string> = {
+  today: "Today's Entries",
+  week:  'This Week',
+  month: 'This Month',
+  all:   'All Entries',
+}
 
 export default function TimeEntries() {
   const [period, setPeriod] = useState<Period>('today')
@@ -53,18 +64,22 @@ export default function TimeEntries() {
 
   return (
     <div className="bento-card h-full flex flex-col p-5">
-      {/* Header + tabs */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-sm font-semibold text-foreground">Time Entries</h2>
+          <p className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground">
+            {HEADER_LABELS[period]}
+          </p>
           <p className="text-xs text-muted-foreground mt-0.5">{entries.length} entries</p>
         </div>
-        <div className="flex items-center gap-0.5 p-1 rounded-xl" style={{ background: 'hsl(var(--muted) / 0.4)' }}>
-          {TABS.map(t => (
+        {/* Tab pills */}
+        <div className="flex items-center gap-0.5 p-1 rounded-xl"
+          style={{ background: 'hsl(var(--muted) / 0.25)' }}>
+          {TAB_LABELS.map(t => (
             <button key={t.id} onClick={() => setPeriod(t.id)}
-              className="tag text-[11px] px-2.5 py-1"
+              className="tag text-[11px] px-2.5 py-1 transition-all"
               style={period === t.id
-                ? { background: 'hsl(var(--card))', color: 'hsl(var(--primary))', boxShadow: '0 1px 4px rgba(0,0,0,.3)' }
+                ? { background: 'hsl(var(--card))', color: 'hsl(var(--foreground))', boxShadow: '0 1px 4px rgba(0,0,0,.3)' }
                 : { color: 'hsl(var(--muted-foreground))' }
               }
             >{t.label}</button>
@@ -72,12 +87,15 @@ export default function TimeEntries() {
         </div>
       </div>
 
-      {/* List */}
-      <div className="flex-1 overflow-y-auto space-y-1.5 pr-0.5 min-h-0">
+      {/* Entries list */}
+      <div className="flex-1 overflow-y-auto min-h-0">
         {isLoadingEntries ? (
-          [...Array(5)].map((_, i) => (
-            <div key={i} className="h-12 rounded-2xl animate-pulse" style={{ background: 'hsl(var(--muted) / 0.3)' }} />
-          ))
+          <div className="space-y-px">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-14 rounded-xl animate-pulse my-1"
+                style={{ background: 'hsl(var(--muted) / 0.2)' }} />
+            ))}
+          </div>
         ) : entries.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-3 py-8">
             <div className="w-10 h-10 rounded-2xl flex items-center justify-center"
@@ -86,32 +104,40 @@ export default function TimeEntries() {
             </div>
             <p className="text-sm text-muted-foreground">No entries for this period</p>
           </div>
-        ) : entries.map(entry => (
-          <div key={entry.id}
-            className="flex items-center gap-3 px-3.5 py-2.5 rounded-2xl transition-colors group cursor-default"
-            style={{ background: 'hsl(var(--card) / 0.5)' }}
-            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'hsl(var(--card))'}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'hsl(var(--card) / 0.5)'}
-          >
-            <div className="w-2 h-2 rounded-full flex-shrink-0"
-              style={{ backgroundColor: (entry as any).project?.color || 'hsl(var(--primary))' }} />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-foreground truncate leading-none">
-                {entry.description || (entry as any).project?.name || 'No description'}
-              </p>
-              <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                {(entry as any).project?.name || '—'} · {fmtClock(entry.start_time)}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {entry.is_billable && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-md"
-                  style={{ color: 'hsl(var(--primary))', background: 'hsl(var(--primary) / 0.1)' }}>$</span>
-              )}
-              <span className="text-xs font-mono text-muted-foreground tabular-time">{fmtTime(entry.duration)}</span>
-            </div>
+        ) : (
+          <div>
+            {entries.map((entry, i) => (
+              <div key={entry.id}
+                className="flex items-center justify-between py-3 group"
+                style={{ borderBottom: i < entries.length - 1 ? '1px solid hsl(var(--border))' : 'none' }}
+              >
+                {/* Left: description + project */}
+                <div className="flex-1 min-w-0 mr-4">
+                  <p className="text-sm font-medium text-foreground truncate leading-none">
+                    {entry.description || 'Untitled entry'}
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: (entry as any).project?.color || 'hsl(var(--primary))' }} />
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {(entry as any).project?.name || '—'}
+                    </p>
+                  </div>
+                </div>
+                {/* Right: start time + duration */}
+                <div className="flex items-center gap-4 flex-shrink-0">
+                  <p className="text-[11px] text-muted-foreground tabular-time hidden sm:block">
+                    {fmtClock(entry.start_time)}
+                  </p>
+                  <p className="text-sm font-semibold tabular-time"
+                    style={{ color: 'hsl(var(--primary))' }}>
+                    {fmtHMS(entry.duration)}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
     </div>
   )
