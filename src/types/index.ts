@@ -124,6 +124,7 @@ export interface TimeEntry {
   duration: number // In seconds
   description?: string
   is_billable: boolean
+  hourly_rate?: number
   user_id: string
   project_id?: string
   task_id?: string
