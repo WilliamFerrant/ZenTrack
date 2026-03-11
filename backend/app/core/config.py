@@ -23,15 +23,17 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # Database
+    DATABASE_URL: Optional[str] = None
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "password"
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: str = "5432"
     POSTGRES_DB: str = "zentracker"
 
-    @property
-    def DATABASE_URL(self) -> str:
-        """Construct database URL from components."""
+    def get_database_url(self) -> str:
+        """Return DATABASE_URL if set, otherwise construct from components."""
+        if self.DATABASE_URL:
+            return self.DATABASE_URL
         return (
             f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
