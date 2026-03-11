@@ -1,40 +1,20 @@
 'use client'
 
-import { useDataStore, useTimerStore } from '@/stores'
-import { FolderOpen, Play } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Play, FolderOpen } from 'lucide-react'
 import Link from 'next/link'
+import { useDataStore, useTimerStore } from '@/stores'
 import type { Project } from '@/types'
 
 function fmtHM(sec: number) {
-  if (!sec) return '0h 00m'
-  const h = Math.floor(sec / 3600)
-  const m = Math.floor((sec % 3600) / 60)
-  return `${h}h ${String(m).padStart(2, '0')}m`
-}
-
-function ProjectArc({ color, pct }: { color: string; pct: number }) {
-  const r = 15
-  const circ = 2 * Math.PI * r  // ≈ 94.25
-  return (
-    <svg width="40" height="40" viewBox="0 0 40 40" className="flex-shrink-0">
-      <circle cx="20" cy="20" r={r} fill="none"
-        stroke="hsl(var(--muted) / 0.28)" strokeWidth="3.5" />
-      {pct > 0.01 && (
-        <circle cx="20" cy="20" r={r} fill="none"
-          stroke={color || 'hsl(var(--primary))'} strokeWidth="3.5"
-          strokeDasharray={`${pct * circ} ${circ}`} strokeLinecap="round"
-          transform="rotate(-90 20 20)"
-          style={{ transition: 'stroke-dasharray 0.5s ease' }} />
-      )}
-    </svg>
-  )
+  const h = String(Math.floor(sec / 3600)).padStart(2, '0')
+  const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0')
+  return `${h}:${m}`
 }
 
 export default function ProjectsGrid() {
   const { projects, isLoadingProjects } = useDataStore()
   const { isRunning, setSelectedProject, startTimer } = useTimerStore()
-
-  const maxTime = Math.max(...projects.map(p => p.total_time ?? 0), 1)
 
   const quickStart = async (p: Project) => {
     setSelectedProject(p)
@@ -44,66 +24,59 @@ export default function ProjectsGrid() {
   }
 
   return (
-    <div className="bento-card h-full flex flex-col p-5">
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground">
-          Projects
-        </p>
-        <Link href="/app/projects"
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-          View all →
-        </Link>
-      </div>
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.15, ease: [0.32, 0.72, 0, 1] }}
+    >
+      <h2 className="text-lg font-medium text-foreground mb-4">Quick Start</h2>
 
       {isLoadingProjects ? (
-        <div className="flex-1 grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-14 rounded-xl animate-pulse"
-              style={{ background: 'hsl(var(--muted) / 0.2)' }} />
+            <div key={i} className="glass-card h-32 animate-pulse" />
           ))}
         </div>
       ) : projects.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center gap-3 py-8">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
-            style={{ background: 'hsl(var(--muted) / 0.4)' }}>
-            <FolderOpen size={22} className="text-muted-foreground" />
-          </div>
+        <div className="glass-card p-8 flex flex-col items-center gap-3">
+          <FolderOpen size={32} className="text-muted-foreground" />
           <p className="text-sm text-muted-foreground">No projects yet</p>
-          <Link href="/app/projects" className="btn-primary-zen px-4 py-2 text-xs">
+          <Link href="/app/projects"
+            className="text-xs px-4 py-2 rounded-lg font-medium transition-colors hover:opacity-80"
+            style={{ background: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}>
             Create project
           </Link>
         </div>
       ) : (
-        <div className="flex-1 grid grid-cols-3 gap-x-6 gap-y-0 content-start">
-          {projects.slice(0, 6).map((p, i) => {
-            const pct = (p.total_time ?? 0) / maxTime
-            const isLast = i >= projects.slice(0, 6).length - 3
-            return (
-              <div key={p.id}
-                className="flex items-center gap-3 py-2.5 group"
-                style={{ borderBottom: isLast ? 'none' : '1px solid hsl(var(--border))' }}
-              >
-                <ProjectArc color={p.color || 'hsl(var(--primary))'} pct={pct} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate leading-none">
-                    {p.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground tabular-time mt-0.5">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          {projects.slice(0, 6).map((p, i) => (
+            <motion.button
+              key={p.id}
+              whileHover={{ y: -3 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => quickStart(p)}
+              className="glass-card p-4 flex flex-col items-start text-left h-32 justify-between group relative overflow-hidden"
+            >
+              <div>
+                <div className="w-2.5 h-2.5 rounded-full mb-2"
+                  style={{ backgroundColor: p.color || 'hsl(var(--primary))' }} />
+                <p className="font-medium text-sm text-foreground">{p.name}</p>
+              </div>
+              <div className="flex items-end justify-between w-full">
+                <div>
+                  <p className="text-[11px] text-muted-foreground">Today</p>
+                  <p className="font-mono text-sm text-foreground tabular-nums">
                     {fmtHM(p.total_time ?? 0)}
                   </p>
                 </div>
-                <button onClick={() => quickStart(p)}
-                  className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0
-                             opacity-0 group-hover:opacity-100 transition-all duration-200 -translate-x-1 group-hover:translate-x-0"
-                  style={{ background: 'hsl(var(--primary) / 0.12)', color: 'hsl(var(--primary))' }}
-                >
-                  <Play size={10} fill="currentColor" />
-                </button>
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Play size={14} className="text-primary" fill="currentColor" />
+                </div>
               </div>
-            )
-          })}
+            </motion.button>
+          ))}
         </div>
       )}
-    </div>
+    </motion.div>
   )
 }

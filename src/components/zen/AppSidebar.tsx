@@ -1,16 +1,16 @@
 'use client'
 
-import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutDashboard, FolderOpen, Clock, BarChart2, Settings, LogOut } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { BarChart2, FolderOpen, Clock, FileText, History, Settings, LogOut } from 'lucide-react'
 import { useAuthStore } from '@/stores'
 
 const NAV = [
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/app/dashboard' },
-  { icon: FolderOpen,      label: 'Projects',  href: '/app/projects'  },
-  { icon: Clock,           label: 'Timer',     href: '/app/tracking'  },
-  { icon: BarChart2,       label: 'Reports',   href: '/app/reports'   },
-  { icon: Settings,        label: 'Settings',  href: '/app/settings'  },
+  { icon: BarChart2,  label: 'Dashboard', href: '/app/dashboard' },
+  { icon: FolderOpen, label: 'Projects',  href: '/app/projects'  },
+  { icon: Clock,      label: 'Timer',     href: '/app/tracking'  },
+  { icon: FileText,   label: 'Reports',   href: '/app/reports'   },
+  { icon: History,    label: 'History',   href: '/app/reports'   },
 ]
 
 export default function AppSidebar() {
@@ -23,52 +23,57 @@ export default function AppSidebar() {
   }
 
   return (
-    <aside
-      className="fixed left-0 top-0 h-full w-[72px] z-50 flex flex-col items-center py-4"
-      style={{ background: 'hsl(var(--sidebar-background))', borderRight: '1px solid hsl(var(--sidebar-border))' }}
-    >
-      {/* Logo */}
+    <aside className="w-64 p-6 flex-shrink-0 hidden lg:flex flex-col"
+      style={{ background: 'hsl(var(--sidebar-background))', borderRight: '1px solid hsl(var(--border) / 0.05)' }}>
+      {/* Brand */}
       <Link href="/app/dashboard"
-        className="w-9 h-9 rounded-2xl flex items-center justify-center mb-6 font-bold text-sm transition-all hover:scale-105 select-none"
-        style={{ background: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
-      >ZT</Link>
+        className="text-2xl font-bold text-foreground mb-12 tracking-tight block hover:opacity-80 transition-opacity">
+        ZenTrack
+      </Link>
 
-      {/* Nav — icon on top, label below, stacked */}
-      <nav className="flex flex-col items-center gap-0.5 flex-1 w-full px-2">
+      {/* Nav */}
+      <nav className="flex-1 space-y-1">
         {NAV.map(({ icon: Icon, label, href }) => {
           const active = pathname === href || pathname.startsWith(href + '/')
           return (
-            <Link key={href} href={href}
-              className="flex flex-col items-center justify-center gap-1 w-full py-2.5 rounded-2xl transition-all duration-200 select-none"
-              style={{
-                background: active ? 'hsl(var(--primary) / 0.12)' : 'transparent',
-                color: active ? 'hsl(var(--primary))' : 'hsl(var(--sidebar-foreground))',
-              }}
+            <Link key={label} href={href}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors w-full text-left ${
+                active
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+              }`}
             >
-              <Icon size={18} strokeWidth={active ? 2.2 : 1.6} />
-              <span style={{
-                fontSize: '9px',
-                fontWeight: active ? 600 : 400,
-                letterSpacing: '0.02em',
-                lineHeight: 1,
-              }}>{label}</span>
+              <Icon size={20} strokeWidth={active ? 2 : 1.6} />
+              <span className="font-medium text-sm">{label}</span>
             </Link>
           )
         })}
       </nav>
 
-      {/* Footer: logout + avatar */}
-      <div className="flex flex-col items-center gap-2 mt-2">
+      {/* Settings */}
+      <Link href="/app/settings"
+        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors mb-2">
+        <Settings size={20} strokeWidth={1.6} />
+        <span className="font-medium text-sm">Settings</span>
+      </Link>
+
+      {/* User */}
+      <div className="flex items-center gap-3 px-1 pt-3"
+        style={{ borderTop: '1px solid hsl(var(--border) / 0.06)' }}>
+        <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0"
+          style={{ background: 'hsl(var(--primary) / 0.2)', color: 'hsl(var(--primary))' }}>
+          {user?.first_name?.[0]?.toUpperCase() || 'U'}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-sm text-foreground truncate">
+            {user?.first_name} {user?.last_name}
+          </p>
+          <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+        </div>
         <button onClick={handleLogout} title="Sign out"
-          className="w-8 h-8 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-          style={{ color: 'hsl(var(--sidebar-foreground))' }}
-        >
+          className="text-muted-foreground hover:text-foreground transition-colors p-1">
           <LogOut size={15} strokeWidth={1.6} />
         </button>
-        <div
-          className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold select-none"
-          style={{ background: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
-        >{user?.first_name?.[0]?.toUpperCase() || 'U'}</div>
       </div>
     </aside>
   )

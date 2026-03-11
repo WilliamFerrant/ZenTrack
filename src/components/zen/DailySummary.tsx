@@ -1,43 +1,63 @@
 'use client'
 
 import { useMemo } from 'react'
+import { motion } from 'framer-motion'
 import { useDataStore } from '@/stores'
-import { Zap } from 'lucide-react'
 
-function fmtHM(sec: number) {
-  const h = Math.floor(sec / 3600)
-  const m = Math.floor((sec % 3600) / 60)
-  return `${h}h ${String(m).padStart(2, '0')}m`
-}
+// SVG circle-as-path gauge (matches reference exactly)
+const CIRC = 2 * Math.PI * 15.9155   // ≈ 100
 
-// Small ring for the billable % stat
-function MiniRing({ pct, size = 32 }: { pct: number; size?: number }) {
-  const r = size / 2 - 4
-  const circ = 2 * Math.PI * r
+function SummaryCard({
+  title, value, gaugeValue, delay = 0,
+}: {
+  title: string; value: string; gaugeValue?: number; delay?: number
+}) {
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="flex-shrink-0">
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none"
-        stroke="hsl(var(--primary) / 0.2)" strokeWidth="3" />
-      {pct > 0 && (
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none"
-          stroke="hsl(var(--primary))" strokeWidth="3"
-          strokeDasharray={`${pct * circ} ${circ}`} strokeLinecap="round"
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-          style={{ transition: 'stroke-dasharray 0.5s ease' }} />
-      )}
-    </svg>
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.1 + delay, ease: [0.32, 0.72, 0, 1] }}
+      className="glass-card p-5"
+    >
+      <h3 className="text-muted-foreground text-xs font-medium uppercase tracking-wider">{title}</h3>
+      <div className="flex items-end justify-between mt-2">
+        <p className="text-2xl font-semibold text-foreground tabular-nums">{value}</p>
+        {gaugeValue !== undefined && (
+          <div className="w-10 h-10">
+            <svg viewBox="0 0 36 36" className="w-full h-full">
+              <path
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none" stroke="hsl(var(--muted) / 0.15)" strokeWidth="3"
+              />
+              <motion.path
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none" stroke="hsl(var(--primary))" strokeWidth="3" strokeLinecap="round"
+                style={{ filter: 'drop-shadow(0 0 4px hsl(var(--primary) / 0.3))' }}
+                initial={{ strokeDasharray: `0, ${CIRC}` }}
+                animate={{ strokeDasharray: `${(gaugeValue / 100) * CIRC}, ${CIRC}` }}
+                transition={{ duration: 1, delay: 0.5, ease: [0.32, 0.72, 0, 1] }}
+              />
+            </svg>
+          </div>
+        )}
+      </div>
+    </motion.div>
   )
 }
 
+function fmtHM(sec: number) {
+  const h = String(Math.floor(sec / 3600)).padStart(2, '0')
+  const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0')
+  return `${h}:${m}`
+}
+
 export default function DailySummary() {
-  const { dashboardSummary, recentEntries, isLoadingDashboard } = useDataStore()
+  const { dashboardSummary, recentEntries } = useDataStore()
 
   const total    = dashboardSummary?.totals?.total_time    ?? 0
   const billable = dashboardSummary?.totals?.billable_time ?? 0
-  const goalPct  = Math.min((total / (8 * 3600)), 1)
   const billPct  = total > 0 ? Math.round((billable / total) * 100) : 0
 
-  // Streak: consecutive days with at least one entry
   const streak = useMemo(() => {
     const seen = new Set(recentEntries.map(e => {
       const d = new Date(e.start_time instanceof Date ? e.start_time : String(e.start_time))
@@ -54,58 +74,11 @@ export default function DailySummary() {
     return count
   }, [recentEntries])
 
-  if (isLoadingDashboard) {
-    return <div className="bento-card animate-pulse rounded-3xl" style={{ height: 160 }} />
-  }
-
   return (
-    <div className="bento-card p-5 flex flex-col gap-3">
-      <p className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground">Today</p>
-
-      {/* Big time */}
-      <div>
-        <p className="text-3xl font-bold tabular-time text-foreground leading-none">
-          {fmtHM(total)}
-        </p>
-        <p className="text-xs text-muted-foreground mt-1">Total tracked</p>
-      </div>
-
-      {/* Stats row: billable circle + streak */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2.5 flex-1">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-            style={{ background: 'hsl(var(--primary) / 0.1)' }}>
-            <MiniRing pct={billPct / 100} size={28} />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-foreground tabular-time">{billPct}%</p>
-            <p className="text-[10px] text-muted-foreground">Billable</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2.5 flex-1">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-            style={{ background: 'hsl(var(--primary) / 0.1)', color: 'hsl(var(--primary))' }}>
-            <Zap size={14} />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-foreground">{streak} days</p>
-            <p className="text-[10px] text-muted-foreground">Streak</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Goal progress bar */}
-      <div className="space-y-1">
-        <div className="flex justify-between text-[10px] text-muted-foreground">
-          <span>Daily goal</span>
-          <span className="tabular-time">{Math.round(goalPct * 100)}%</span>
-        </div>
-        <div className="h-1 rounded-full overflow-hidden" style={{ background: 'hsl(var(--muted) / 0.3)' }}>
-          <div className="h-full rounded-full transition-all duration-700"
-            style={{ width: `${goalPct * 100}%`, background: 'hsl(var(--primary))' }} />
-        </div>
-      </div>
+    <div className="space-y-4">
+      <SummaryCard title="Total Today"     value={fmtHM(total)}     delay={0}    />
+      <SummaryCard title="Billable"        value={`${billPct}%`}    gaugeValue={billPct} delay={0.05} />
+      <SummaryCard title="Current Streak"  value={`${streak} Day${streak !== 1 ? 's' : ''}`} delay={0.1} />
     </div>
   )
 }

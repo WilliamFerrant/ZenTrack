@@ -4,140 +4,82 @@
 
 @layer base {
   :root {
-    --background: 0 0% 10%;
-    --foreground: 220 9% 91%;
+    --background: 0 0% 12%;
+    --foreground: 225 8% 90%;
 
-    --card: 0 0% 14%;
-    --card-foreground: 220 9% 91%;
+    --card: 0 0% 15%;
+    --card-foreground: 225 8% 90%;
 
-    --popover: 0 0% 14%;
-    --popover-foreground: 220 9% 91%;
+    --popover: 0 0% 15%;
+    --popover-foreground: 225 8% 90%;
 
-    --primary: 166 18% 70%;
-    --primary-foreground: 0 0% 10%;
+    --primary: 122 10% 72%;
+    --primary-foreground: 0 0% 12%;
 
-    --secondary: 0 0% 100%;
-    --secondary-foreground: 220 9% 91%;
+    --secondary: 0 0% 18%;
+    --secondary-foreground: 225 8% 90%;
 
-    --muted: 220 6% 32%;
-    --muted-foreground: 220 8% 65%;
+    --muted: 225 8% 40%;
+    --muted-foreground: 225 8% 70%;
 
-    --accent: 166 18% 70%;
-    --accent-foreground: 0 0% 10%;
+    --accent: 122 10% 72%;
+    --accent-foreground: 0 0% 12%;
 
-    --destructive: 0 63% 50%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 100% / 0.06;
-    --input: 0 0% 100% / 0.06;
-    --ring: 166 18% 70%;
+    --border: 0 0% 100%;
+    --input: 0 0% 20%;
+    --ring: 122 10% 72%;
 
-    --radius: 1.25rem;
-    --glow: 166 28% 62%;
-    --card-sage: 166 20% 82%;
+    --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 8%;
-    --sidebar-foreground: 220 8% 65%;
-    --sidebar-primary: 166 18% 70%;
-    --sidebar-primary-foreground: 0 0% 10%;
-    --sidebar-accent: 0 0% 100% / 0.06;
-    --sidebar-accent-foreground: 220 9% 91%;
-    --sidebar-border: 0 0% 100% / 0.06;
-    --sidebar-ring: 166 18% 70%;
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 225 8% 70%;
+    --sidebar-primary: 122 10% 72%;
+    --sidebar-primary-foreground: 0 0% 12%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 225 8% 90%;
+    --sidebar-border: 0 0% 100%;
+    --sidebar-ring: 122 10% 72%;
   }
 }
 
 @layer base {
-  *, *::before, *::after { box-sizing: border-box; }
-
+  * {
+    @apply border-border/5;
+    box-sizing: border-box;
+  }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-
   * {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--muted) / 0.4) transparent;
   }
 }
 
-@layer components {
-  /* ── Bento cards ───────────────────────────────────────────────────── */
-  .bento-card {
-    @apply rounded-3xl;
+@layer utilities {
+  .glass-card {
+    @apply rounded-2xl backdrop-blur-xl;
     background: hsl(var(--card) / 0.7);
-    border: 1px solid hsl(0 0% 100% / 0.055);
-    backdrop-filter: blur(48px) saturate(1.3);
     box-shadow:
-      0 0 0 1px hsl(0 0% 100% / 0.035),
-      inset 0 1px 0 0 hsl(0 0% 100% / 0.04),
-      0 8px 40px -12px rgba(0, 0, 0, 0.55);
+      0 0 0 1px hsl(var(--border) / 0.05),
+      0px 4px 8px -2px rgba(0,0,0,0.1),
+      0px 10px 20px -5px rgba(0,0,0,0.2);
+    transition: box-shadow 0.3s cubic-bezier(0.32, 0.72, 0, 1);
   }
-
-  .bento-card-hover {
-    @apply bento-card transition-all duration-300 cursor-pointer;
-  }
-  .bento-card-hover:hover {
-    transform: translateY(-2px) scale(1.004);
-    border-color: hsl(0 0% 100% / 0.09);
+  .glass-card:hover {
     box-shadow:
-      0 0 0 1px hsl(0 0% 100% / 0.06),
-      inset 0 1px 0 0 hsl(0 0% 100% / 0.06),
-      0 20px 60px -15px rgba(0, 0, 0, 0.65);
+      0 0 0 1px hsl(var(--border) / 0.08),
+      0px 8px 16px -4px rgba(0,0,0,0.15),
+      0px 20px 30px -10px rgba(0,0,0,0.25);
   }
-
-  .bento-sage {
-    @apply rounded-3xl;
-    background: hsl(var(--card-sage) / 0.1);
-    border: 1px solid hsl(var(--primary) / 0.12);
-    backdrop-filter: blur(48px) saturate(1.4);
-    box-shadow:
-      0 0 0 1px hsl(var(--primary) / 0.06),
-      inset 0 1px 0 0 hsl(var(--primary) / 0.05),
-      0 8px 40px -12px rgba(0, 0, 0, 0.4);
-  }
-
-  /* ── Utilities ─────────────────────────────────────────────────────── */
-  .tabular-time {
-    font-feature-settings: 'tnum';
+  .tabular-nums {
+    font-feature-settings: "tnum";
     font-variant-numeric: tabular-nums;
-  }
-
-  .glow-primary {
-    box-shadow: 0 0 24px 0 hsl(var(--glow) / 0.22);
-  }
-  .glow-primary-hover:hover {
-    box-shadow: 0 0 36px 0 hsl(var(--glow) / 0.38);
-  }
-
-  /* ── Form elements ─────────────────────────────────────────────────── */
-  .input-zen {
-    @apply w-full bg-white/[0.05] border text-foreground placeholder:text-muted-foreground
-           rounded-xl px-3 py-2.5 text-sm outline-none transition-colors;
-    border-color: hsl(var(--border));
-  }
-  .input-zen:focus {
-    border-color: hsl(var(--primary) / 0.4);
-    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.08);
-  }
-
-  /* ── Buttons ───────────────────────────────────────────────────────── */
-  .btn-primary-zen {
-    @apply inline-flex items-center justify-center gap-2 rounded-2xl font-medium
-           bg-primary text-primary-foreground transition-all duration-300
-           hover:-translate-y-0.5 active:scale-[0.97]
-           disabled:opacity-40 disabled:pointer-events-none;
-  }
-  .btn-ghost-zen {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl font-medium
-           text-muted-foreground hover:text-foreground hover:bg-white/[0.06]
-           transition-all duration-200 active:scale-95;
-  }
-
-  /* ── Tag / pill ────────────────────────────────────────────────────── */
-  .tag {
-    @apply px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer;
   }
 }

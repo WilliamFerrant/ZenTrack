@@ -36,7 +36,7 @@ export function ModalContainer() {
           {/* Background overlay */}
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+              className="fixed inset-0 transition-opacity" style={{ background: "rgba(0,0,0,0.6)" }}
               aria-hidden="true"
               onClick={() => hideModal(modal.id)}
             />
@@ -49,7 +49,7 @@ export function ModalContainer() {
               &#8203;
             </span>
 
-            <div className="inline-block align-bottom bento-card px-4 pt-5 pb-4 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div className="inline-block align-bottom glass-card px-4 pt-5 pb-4 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
               {/* Modal Header */}
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium text-foreground">

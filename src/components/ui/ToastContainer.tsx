@@ -35,7 +35,7 @@ function ToastItem({ toast, onClose }: ToastItemProps) {
   }, [toast.duration, onClose])
 
   const getToastStyles = () => {
-    const base = 'max-w-sm w-full bento-card shadow-2xl pointer-events-auto'
+    const base = 'max-w-sm w-full glass-card shadow-2xl pointer-events-auto'
 
     switch (toast.type) {
       case 'success':

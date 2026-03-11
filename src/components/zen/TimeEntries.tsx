@@ -1,35 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { Edit2, Trash2, Clock } from 'lucide-react'
 import { useDataStore } from '@/stores'
-import { Clock } from 'lucide-react'
 
-type Period = 'today' | 'week' | 'month' | 'all'
-
-function isToday(v: unknown) {
-  const d = v instanceof Date ? v : new Date(String(v))
-  const t = new Date()
-  return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate()
-}
-function isWeek(v: unknown) {
-  const d = v instanceof Date ? v : new Date(String(v))
-  const s = new Date(); s.setDate(s.getDate() - s.getDay()); s.setHours(0, 0, 0, 0)
-  return d >= s
-}
-function isMonth(v: unknown) {
-  const d = v instanceof Date ? v : new Date(String(v))
-  const t = new Date()
-  return d.getMonth() === t.getMonth() && d.getFullYear() === t.getFullYear()
-}
-
-// HH:MM:SS like "1:10:23"
-function fmtHMS(sec: number) {
+function fmtHM(sec: number) {
+  if (!sec) return '0m'
   const h = Math.floor(sec / 3600)
   const m = Math.floor((sec % 3600) / 60)
-  const s = sec % 60
-  return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  return h > 0 ? `${h}h ${m > 0 ? m + 'm' : ''}`.trim() : `${m}m`
 }
-
 function fmtClock(v: unknown) {
   try {
     return (v instanceof Date ? v : new Date(String(v)))
@@ -37,108 +17,88 @@ function fmtClock(v: unknown) {
   } catch { return '' }
 }
 
-const TAB_LABELS: { id: Period; label: string }[] = [
-  { id: 'today', label: 'Today' },
-  { id: 'week',  label: 'Week'  },
-  { id: 'month', label: 'Month' },
-  { id: 'all',   label: 'All'   },
-]
-
-const HEADER_LABELS: Record<Period, string> = {
-  today: "Today's Entries",
-  week:  'This Week',
-  month: 'This Month',
-  all:   'All Entries',
-}
-
 export default function TimeEntries() {
-  const [period, setPeriod] = useState<Period>('today')
-  const { recentEntries, isLoadingEntries } = useDataStore()
+  const { recentEntries, isLoadingEntries, deleteTimeEntry } = useDataStore()
 
+  // show today's entries by default
+  const today = new Date()
   const entries = recentEntries.filter(e => {
-    if (period === 'today') return isToday(e.start_time)
-    if (period === 'week')  return isWeek(e.start_time)
-    if (period === 'month') return isMonth(e.start_time)
-    return true
+    const d = new Date(e.start_time instanceof Date ? e.start_time : String(e.start_time))
+    return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate()
   })
 
   return (
-    <div className="bento-card h-full flex flex-col p-5">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <p className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground">
-            {HEADER_LABELS[period]}
-          </p>
-          <p className="text-xs text-muted-foreground mt-0.5">{entries.length} entries</p>
-        </div>
-        {/* Tab pills */}
-        <div className="flex items-center gap-0.5 p-1 rounded-xl"
-          style={{ background: 'hsl(var(--muted) / 0.25)' }}>
-          {TAB_LABELS.map(t => (
-            <button key={t.id} onClick={() => setPeriod(t.id)}
-              className="tag text-[11px] px-2.5 py-1 transition-all"
-              style={period === t.id
-                ? { background: 'hsl(var(--card))', color: 'hsl(var(--foreground))', boxShadow: '0 1px 4px rgba(0,0,0,.3)' }
-                : { color: 'hsl(var(--muted-foreground))' }
-              }
-            >{t.label}</button>
-          ))}
-        </div>
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.25, ease: [0.32, 0.72, 0, 1] }}
+      className="glass-card overflow-hidden"
+    >
+      <div className="p-6">
+        <h2 className="text-lg font-medium text-foreground">Today's Entries</h2>
       </div>
 
-      {/* Entries list */}
-      <div className="flex-1 overflow-y-auto min-h-0">
-        {isLoadingEntries ? (
-          <div className="space-y-px">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-14 rounded-xl animate-pulse my-1"
-                style={{ background: 'hsl(var(--muted) / 0.2)' }} />
-            ))}
-          </div>
-        ) : entries.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-3 py-8">
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center"
-              style={{ background: 'hsl(var(--muted) / 0.4)' }}>
-              <Clock size={18} className="text-muted-foreground" />
-            </div>
-            <p className="text-sm text-muted-foreground">No entries for this period</p>
-          </div>
-        ) : (
-          <div>
-            {entries.map((entry, i) => (
-              <div key={entry.id}
-                className="flex items-center justify-between py-3 group"
-                style={{ borderBottom: i < entries.length - 1 ? '1px solid hsl(var(--border))' : 'none' }}
-              >
-                {/* Left: description + project */}
-                <div className="flex-1 min-w-0 mr-4">
-                  <p className="text-sm font-medium text-foreground truncate leading-none">
+      {isLoadingEntries ? (
+        <div className="px-6 pb-6 space-y-3">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-12 rounded-lg animate-pulse"
+              style={{ background: 'hsl(var(--secondary) / 0.5)' }} />
+          ))}
+        </div>
+      ) : entries.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 gap-3"
+          style={{ borderTop: '1px solid hsl(var(--border) / 0.05)' }}>
+          <Clock size={28} className="text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">No entries today</p>
+        </div>
+      ) : (
+        <div className="divide-y" style={{ borderColor: 'hsl(var(--border) / 0.05)' }}>
+          {entries.map(entry => (
+            <div key={entry.id}
+              className="flex items-center justify-between px-6 py-4 group transition-colors"
+              style={{ backgroundColor: 'transparent' }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.backgroundColor = 'hsl(var(--secondary) / 0.3)'}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'}
+            >
+              {/* Description + project */}
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-sm text-foreground truncate">
                     {entry.description || 'Untitled entry'}
-                  </p>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: (entry as any).project?.color || 'hsl(var(--primary))' }} />
-                    <p className="text-[11px] text-muted-foreground truncate">
-                      {(entry as any).project?.name || '—'}
-                    </p>
-                  </div>
+                  </span>
                 </div>
-                {/* Right: start time + duration */}
-                <div className="flex items-center gap-4 flex-shrink-0">
-                  <p className="text-[11px] text-muted-foreground tabular-time hidden sm:block">
-                    {fmtClock(entry.start_time)}
-                  </p>
-                  <p className="text-sm font-semibold tabular-time"
-                    style={{ color: 'hsl(var(--primary))' }}>
-                    {fmtHMS(entry.duration)}
-                  </p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: (entry as any).project?.color || 'hsl(var(--primary))' }} />
+                  <span className="text-xs text-muted-foreground truncate">
+                    {(entry as any).project?.name || '—'}
+                  </span>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+
+              {/* Time + actions */}
+              <div className="flex items-center gap-5 flex-shrink-0">
+                <span className="font-mono text-xs text-muted-foreground">
+                  {fmtClock(entry.start_time)}
+                </span>
+                <span className="font-medium text-sm tabular-nums text-foreground w-14 text-right">
+                  {fmtHM(entry.duration)}
+                </span>
+                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button className="text-muted-foreground hover:text-foreground transition-colors">
+                    <Edit2 size={14} />
+                  </button>
+                  <button
+                    onClick={() => deleteTimeEntry(String(entry.id))}
+                    className="text-muted-foreground hover:text-destructive transition-colors">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </motion.div>
   )
 }

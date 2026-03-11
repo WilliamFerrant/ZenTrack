@@ -1,8 +1,8 @@
-// App layout with sidebar
 'use client'
 
 import { ReactNode, useEffect } from 'react'
 import AppSidebar from '../zen/AppSidebar'
+import ZenTopBar  from '../zen/ZenTopBar'
 import { ToastContainer } from '../ui/ToastContainer'
 import { ModalContainer } from '../ui/ModalContainer'
 import { NetworkStatusIndicator } from '../ui/NetworkStatusIndicator'
@@ -10,7 +10,6 @@ import { useAppInitialization } from '@/stores'
 
 export interface AppLayoutProps {
   children: ReactNode
-  title?: string
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
@@ -21,10 +20,13 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, [isAuthenticated, initializeApp])
 
   return (
-    <div className="min-h-svh flex bg-background">
+    <div className="flex min-h-screen bg-background">
       <AppSidebar />
-      <main className="flex-1 ml-[72px] p-3 lg:p-4 overflow-y-auto">
-        {children}
+      <main className="flex-1 flex flex-col min-w-0">
+        <ZenTopBar />
+        <div className="flex-1 p-4 lg:p-6 xl:p-8 overflow-y-auto">
+          {children}
+        </div>
       </main>
       <ToastContainer />
       <ModalContainer />
