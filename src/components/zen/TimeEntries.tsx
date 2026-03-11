@@ -35,7 +35,7 @@ export default function TimeEntries() {
       className="glass-card overflow-hidden"
     >
       <div className="p-6">
-        <h2 className="text-lg font-medium text-foreground">Today's Entries</h2>
+        <h2 className="text-lg font-medium text-foreground">Today&apos;s Entries</h2>
       </div>
 
       {isLoadingEntries ? (
