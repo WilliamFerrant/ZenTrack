@@ -11,6 +11,8 @@ from app.schemas.auth import (
     LoginResponse,
     LogoutResponse,
     RefreshTokenRequest,
+    RegisterRequest,
+    RegisterResponse,
     TokenResponse,
     UserProfile,
 )
@@ -46,6 +48,39 @@ def get_current_user(
         )
 
     return user
+
+
+@router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
+def register(
+    register_data: RegisterRequest,
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    """
+    Register a new user account.
+
+    - **full_name**: User full name
+    - **email**: User email address
+    - **password**: Password (min 8 characters)
+    """
+    existing = auth_service.get_user_by_email(register_data.email)
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with this email already exists",
+        )
+
+    name_parts = register_data.full_name.strip().split(" ", 1)
+    first_name = name_parts[0]
+    last_name = name_parts[1] if len(name_parts) > 1 else ""
+
+    user = auth_service.create_user(
+        email=register_data.email,
+        password=register_data.password,
+        first_name=first_name,
+        last_name=last_name,
+    )
+
+    return RegisterResponse(message="Account created successfully", user=user)
 
 
 @router.post("/login", response_model=LoginResponse)

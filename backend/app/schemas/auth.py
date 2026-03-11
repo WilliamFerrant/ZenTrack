@@ -45,3 +45,17 @@ class LogoutResponse(BaseResponse):
     """Schema for logout response."""
 
     pass
+
+
+class RegisterRequest(BaseModel):
+    """Schema for user registration request."""
+
+    full_name: str
+    email: EmailStr
+    password: str
+
+
+class RegisterResponse(BaseResponse):
+    """Schema for registration response."""
+
+    user: UserResponse
