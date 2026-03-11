@@ -3,7 +3,7 @@
 
 import { useTimerStore, useFormattedElapsedTime } from '@/stores'
 
-interface TimerDisplayProps {
+export interface TimerDisplayProps {
   size?: 'sm' | 'md' | 'lg'
   showProject?: boolean
   className?: string

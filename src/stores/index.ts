@@ -3,6 +3,10 @@ export { useAuthStore, initializeAuth, useHasRole, useIsInOrganization } from '.
 export { useTimerStore, formatElapsedTime, formatDuration, useFormattedElapsedTime, useTimerStatus } from './timerStore'
 export { useDataStore, useProjectOptions, useRecentProjects, useDashboardStats } from './dataStore'
 
+import { useAuthStore } from './authStore'
+import { useTimerStore } from './timerStore'
+import { useDataStore } from './dataStore'
+
 // Combined hooks for common patterns
 export const useAppInitialization = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)

@@ -9,7 +9,7 @@ import { ModalContainer } from '../ui/ModalContainer'
 import { NetworkStatusIndicator } from '../ui/NetworkStatusIndicator'
 import { useDataStore, useAppInitialization } from '@/stores'
 
-interface AppLayoutProps {
+export interface AppLayoutProps {
   children: ReactNode
   title?: string
   showSidebar?: boolean

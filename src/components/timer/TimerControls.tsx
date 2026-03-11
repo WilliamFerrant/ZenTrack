@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { useTimerStore, useDataStore } from '@/stores'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 
-interface TimerControlsProps {
+export interface TimerControlsProps {
   size?: 'sm' | 'md' | 'lg'
   showConfirmation?: boolean
   className?: string
@@ -87,6 +87,7 @@ export function TimerControls({ size = 'md', showConfirmation = true, className 
       ),
       confirmText: 'Stop Timer',
       cancelText: 'Keep Running',
+      onClose: () => hideModal('stop-timer-confirm'),
       onConfirm: () => {
         hideModal('stop-timer-confirm')
         executeStop()

@@ -28,25 +28,25 @@ export function SummaryCards() {
       title: `Total Time (${period})`,
       value: formatDuration(stats.totalTime),
       icon: ClockIcon,
-      color: 'blue',
+      color: 'blue' as const,
     },
     {
       title: 'Billable Time',
       value: formatDuration(stats.billableTime),
       icon: CurrencyDollarIcon,
-      color: 'green',
+      color: 'green' as const,
     },
     {
       title: 'Time Entries',
       value: stats.totalEntries.toString(),
       icon: DocumentTextIcon,
-      color: 'purple',
+      color: 'purple' as const,
     },
     {
       title: 'Avg Session',
       value: formatDuration(stats.averageSession),
       icon: ChartBarIcon,
-      color: 'orange',
+      color: 'orange' as const,
     },
   ]
 

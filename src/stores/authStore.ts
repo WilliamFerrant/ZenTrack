@@ -8,7 +8,7 @@ interface AuthStore extends AuthState {
   // Actions
   login: (credentials: LoginRequest) => Promise<void>
   logout: () => void
-  refreshTokens: () => Promise<void>
+  refreshTokens: () => Promise<AuthTokens>
   loadUser: () => Promise<void>
   clearError: () => void
   setUser: (user: User) => void
