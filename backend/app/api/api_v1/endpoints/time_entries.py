@@ -26,7 +26,7 @@ def get_time_tracking_service(db: Session = Depends(get_db)) -> TimeTrackingServ
     return TimeTrackingService(db)
 
 
-@router.get("/", response_model=TimeEntryListResponse)
+@router.get("", response_model=TimeEntryListResponse)
 def get_time_entries(
     start_date: Optional[date] = Query(None, description="Start date filter (YYYY-MM-DD)"),
     end_date: Optional[date] = Query(None, description="End date filter (YYYY-MM-DD)"),
@@ -132,7 +132,7 @@ def get_day_entries(
     )
 
 
-@router.post("/", response_model=TimeEntry)
+@router.post("", response_model=TimeEntry)
 def create_time_entry(
     entry_data: TimeEntryCreate,
     current_user: User = Depends(get_current_user),

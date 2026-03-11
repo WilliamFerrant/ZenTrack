@@ -107,7 +107,7 @@ def get_active_timer(
     return timer
 
 
-@router.get("/", response_model=List[Timer])
+@router.get("", response_model=List[Timer])
 def get_user_timers(
     current_user: User = Depends(get_current_user),
     service: TimeTrackingService = Depends(get_time_tracking_service),
