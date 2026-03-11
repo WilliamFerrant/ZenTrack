@@ -231,7 +231,7 @@ export function LoginForm({ onSuccess, redirectTo = '/app/tracking' }: LoginForm
 
         {/* Register Link */}
         <div className="text-center text-sm text-gray-600">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <a href="/register" className="text-blue-600 hover:text-blue-500 font-medium">
             Sign up
           </a>

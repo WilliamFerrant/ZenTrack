@@ -67,7 +67,7 @@ export function TimerDisplay({ size = 'lg', showProject = true, className = '' }
 
           {currentTimer.description && (
             <div className="text-sm text-gray-600 italic">
-              "{currentTimer.description}"
+              &quot;{currentTimer.description}&quot;
             </div>
           )}
         </div>

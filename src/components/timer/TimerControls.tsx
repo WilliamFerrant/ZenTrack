@@ -153,7 +153,7 @@ export function TimerControls({ size = 'md', showConfirmation = true, className 
         {!isOnline && (
           <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
             <p className="text-sm text-amber-800">
-              🔌 You're offline. Timer will continue running locally but can't be saved until you reconnect.
+              🔌 You&apos;re offline. Timer will continue running locally but can&apos;t be saved until you reconnect.
             </p>
           </div>
         )}
@@ -207,7 +207,7 @@ export function TimerControls({ size = 'md', showConfirmation = true, className 
       {!isOnline && (
         <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
           <p className="text-sm text-amber-800">
-            🔌 You're offline. Timer functions will be available when you reconnect.
+            🔌 You&apos;re offline. Timer functions will be available when you reconnect.
           </p>
         </div>
       )}
