@@ -9,7 +9,7 @@ const NAV = [
   { icon: FolderOpen, label: 'Projects',  href: '/app/projects'  },
   { icon: Timer,      label: 'Timer',     href: '/app/tracking'  },
   { icon: BarChart2,  label: 'Reports',   href: '/app/reports'   },
-  { icon: Clock,      label: 'History',   href: '/app/reports'   },
+  { icon: Clock,      label: 'History',   href: '/app/history'   },
   { icon: Settings,   label: 'Settings',  href: '/app/settings'  },
 ]
 
