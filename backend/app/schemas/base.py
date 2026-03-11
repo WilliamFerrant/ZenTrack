@@ -15,7 +15,7 @@ class TimestampSchema(BaseModel):
 
     class Config:
         """Pydantic configuration."""
-        orm_mode = True
+        from_attributes = True
 
 
 class BaseResponse(BaseModel):
@@ -26,4 +26,4 @@ class BaseResponse(BaseModel):
 
     class Config:
         """Pydantic configuration."""
-        orm_mode = True
+        from_attributes = True

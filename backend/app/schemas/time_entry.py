@@ -49,7 +49,7 @@ class TimeEntry(TimeEntryBase, TimestampSchema):
 
     class Config:
         """Pydantic configuration."""
-        orm_mode = True
+        from_attributes = True
 
 
 class TimeEntryListResponse(BaseModel):
@@ -61,7 +61,7 @@ class TimeEntryListResponse(BaseModel):
 
     class Config:
         """Pydantic configuration."""
-        orm_mode = True
+        from_attributes = True
 
 
 class DailyTimeAggregation(BaseModel):

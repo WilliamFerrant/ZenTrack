@@ -53,4 +53,4 @@ class Task(TaskBase, TimestampSchema):
 
     class Config:
         """Pydantic configuration."""
-        orm_mode = True
+        from_attributes = True

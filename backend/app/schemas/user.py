@@ -38,7 +38,7 @@ class UserResponse(UserBase, TimestampSchema):
 
     class Config:
         """Pydantic configuration."""
-        orm_mode = True
+        from_attributes = True
 
 
 class User(UserResponse):
