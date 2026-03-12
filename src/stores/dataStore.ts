@@ -2,6 +2,7 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import { api } from '../lib/api'
+import { useAuthStore } from './authStore'
 import type {
   Project,
   TimeEntry,
@@ -243,7 +244,11 @@ export const useDataStore = create<DataStore>()(
 
       createProject: async (project: any) => {
         try {
-          const newProject = await api.post<Project>('/projects', project)
+          const organizationId = useAuthStore.getState().user?.organization_id
+          const newProject = await api.post<Project>('/projects', {
+            ...project,
+            ...(organizationId ? { organization_id: organizationId } : {}),
+          })
 
           // Add to projects list
           const projects = get().projects
