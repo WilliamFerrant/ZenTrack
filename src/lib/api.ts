@@ -13,9 +13,60 @@ export class ApiError extends Error {
   }
 }
 
+// In-flight refresh promise — shared so concurrent 401s only trigger one refresh
+let refreshPromise: Promise<string> | null = null;
+
+async function getRefreshedToken(): Promise<string> {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) throw new ApiError('No refresh token', 401);
+
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+
+    if (!response.ok) throw new ApiError('Token refresh failed', response.status);
+
+    const data = await response.json();
+    const newToken = data.access_token ?? data.data?.access_token;
+    const newRefresh = data.refresh_token ?? data.data?.refresh_token;
+
+    if (!newToken) throw new ApiError('No access token in refresh response', 401);
+
+    localStorage.setItem('access_token', newToken);
+    if (newRefresh) localStorage.setItem('refresh_token', newRefresh);
+
+    // Sync into auth store without triggering a full re-login
+    if (typeof window !== 'undefined') {
+      try {
+        const { useAuthStore } = await import('@/stores/authStore');
+        const state = useAuthStore.getState();
+        if (state.tokens) {
+          state.setTokens({
+            ...state.tokens,
+            access_token: newToken,
+            ...(newRefresh ? { refresh_token: newRefresh } : {}),
+          });
+        }
+      } catch { /* store not available server-side */ }
+    }
+
+    return newToken;
+  })().finally(() => {
+    refreshPromise = null;
+  });
+
+  return refreshPromise;
+}
+
 export async function apiRequest<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  _retry = false
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
@@ -23,7 +74,6 @@ export async function apiRequest<T>(
     'Content-Type': 'application/json',
   };
 
-  // Add auth token if available
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('access_token');
     if (token) {
@@ -41,6 +91,19 @@ export async function apiRequest<T>(
 
   try {
     const response = await fetch(url, config);
+
+    // On 401, attempt one token refresh then retry
+    if (response.status === 401 && !_retry && typeof window !== 'undefined') {
+      try {
+        await getRefreshedToken();
+        return apiRequest<T>(endpoint, options, true);
+      } catch {
+        // Refresh failed — logout and surface the original 401
+        const { useAuthStore } = await import('@/stores/authStore');
+        useAuthStore.getState().logout();
+        throw new ApiError('Session expired. Please log in again.', 401);
+      }
+    }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
