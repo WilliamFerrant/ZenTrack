@@ -49,7 +49,7 @@ class Project(Base, TimestampMixin):
 
     # Foreign keys
     organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=False)
-    client_id = Column(Integer, ForeignKey("clients.id"), nullable=True)
+    client_id = Column(Integer, nullable=True)
 
     # Relationships
     organization = relationship("Organization", back_populates="projects")
