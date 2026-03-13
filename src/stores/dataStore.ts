@@ -244,7 +244,7 @@ export const useDataStore = create<DataStore>()(
 
       createProject: async (project: any) => {
         try {
-          // Try in-memory store first, fall back to persisted localStorage state
+          // Try in-memory store first, fall back to persisted localStorage state, then /auth/me
           let organizationId = useAuthStore.getState().user?.organization_id
           if (!organizationId && typeof window !== 'undefined') {
             try {
@@ -253,6 +253,17 @@ export const useDataStore = create<DataStore>()(
                 ? JSON.parse(persisted)?.state?.user?.organization_id
                 : undefined
             } catch { /* ignore parse errors */ }
+          }
+          if (!organizationId) {
+            // Last resort: fetch current user from API
+            try {
+              const me = await api.get<any>('/auth/me')
+              organizationId = me?.organization_id ?? me?.user?.organization_id
+              if (organizationId) {
+                const authState = useAuthStore.getState()
+                if (authState.user) authState.setUser({ ...authState.user, organization_id: organizationId })
+              }
+            } catch { /* ignore */ }
           }
           const newProject = await api.post<Project>('/projects', {
             ...project,
@@ -271,7 +282,10 @@ export const useDataStore = create<DataStore>()(
 
           return newProject
         } catch (error: any) {
-          const errorMessage = error.data?.detail || 'Failed to create project'
+          const detail = error.data?.detail
+          const errorMessage = Array.isArray(detail)
+            ? detail.map((e: any) => `${e.loc?.slice(1).join('.')}: ${e.msg}`).join('; ')
+            : (typeof detail === 'string' ? detail : 'Failed to create project')
           get().showToast({
             type: 'error',
             title: 'Failed to create project',
