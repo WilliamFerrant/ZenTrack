@@ -244,7 +244,16 @@ export const useDataStore = create<DataStore>()(
 
       createProject: async (project: any) => {
         try {
-          const organizationId = useAuthStore.getState().user?.organization_id
+          // Try in-memory store first, fall back to persisted localStorage state
+          let organizationId = useAuthStore.getState().user?.organization_id
+          if (!organizationId && typeof window !== 'undefined') {
+            try {
+              const persisted = localStorage.getItem('auth-store')
+              organizationId = persisted
+                ? JSON.parse(persisted)?.state?.user?.organization_id
+                : undefined
+            } catch { /* ignore parse errors */ }
+          }
           const newProject = await api.post<Project>('/projects', {
             ...project,
             ...(organizationId ? { organization_id: organizationId } : {}),
