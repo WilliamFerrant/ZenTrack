@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find 'c:/web dev/' -maxdepth 3 -name *.py)",
+      "Bash(pip show:*)",
+      "Bash(docker --version)",
+      "Bash(pip install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)"
+    ]
+  }
+}
