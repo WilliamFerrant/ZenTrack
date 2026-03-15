@@ -914,7 +914,6 @@ export default function WeekCalendar() {
     try {
       const s = toDateKey(weekStart)
       const e = toDateKey(weekEnd)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const resp = await api.get<any>(`/time-entries?start_date=${s}&end_date=${e}&limit=500`)
       setEntries(Array.isArray(resp) ? resp : (resp?.entries ?? []))
     } catch {
