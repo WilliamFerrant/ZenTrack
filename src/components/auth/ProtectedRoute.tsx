@@ -4,6 +4,7 @@
 import { useEffect, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores'
+import { config } from '@/lib/config'
 
 interface ProtectedRouteProps {
   children: ReactNode
@@ -22,6 +23,8 @@ export function ProtectedRoute({
   const { isAuthenticated, isLoading, user } = useAuthStore()
 
   useEffect(() => {
+    if (config.mockMode) return
+
     // Wait for auth state to be loaded
     if (isLoading) return
 
@@ -46,12 +49,12 @@ export function ProtectedRoute({
   }, [isAuthenticated, isLoading, user, requiredRole, router, redirectTo])
 
   // Show loading while checking auth
-  if (isLoading) {
+  if (!config.mockMode && isLoading) {
     return <>{fallback}</>
   }
 
   // Show loading if not authenticated (while redirecting)
-  if (!isAuthenticated) {
+  if (!config.mockMode && !isAuthenticated) {
     return <>{fallback}</>
   }
 

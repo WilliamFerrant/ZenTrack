@@ -67,9 +67,13 @@ export const useTimerStore = create<TimerStore>()(
 
           const timer = await api.post<Timer>('/timers/start', startRequest)
 
+          // Use local start time to avoid clock skew from server response
+          const localStartTime = new Date()
+          const timerWithLocalStart = { ...timer, start_time: localStartTime }
+
           // Update state
           set({
-            currentTimer: timer,
+            currentTimer: timerWithLocalStart,
             isRunning: true,
             elapsedTime: 0,
             isStarting: false,
@@ -221,8 +225,10 @@ export const useTimerStore = create<TimerStore>()(
           const timer = await api.get<Timer>('/timers/active')
 
           if (timer) {
-            // Calculate elapsed time
-            const startTime = new Date(timer.start_time)
+            // Force UTC parse: backend returns naive datetime strings without 'Z'
+            const rawStart = String(timer.start_time)
+            const utcString = rawStart.endsWith('Z') || rawStart.includes('+') ? rawStart : rawStart + 'Z'
+            const startTime = new Date(utcString)
             const now = new Date()
             const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000)
 

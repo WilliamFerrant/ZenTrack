@@ -1,13 +1,12 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutGrid, FolderOpen, Timer, BarChart2, Clock, Settings } from 'lucide-react'
+import { LayoutGrid, FolderOpen, BarChart2, Clock, Settings } from 'lucide-react'
 import { useAuthStore } from '@/stores'
 
 const NAV = [
   { icon: LayoutGrid, label: 'Dashboard', href: '/app/dashboard' },
   { icon: FolderOpen, label: 'Projects',  href: '/app/projects'  },
-  { icon: Timer,      label: 'Timer',     href: '/app/tracking'  },
   { icon: BarChart2,  label: 'Reports',   href: '/app/reports'   },
   { icon: Clock,      label: 'History',   href: '/app/history'   },
   { icon: Settings,   label: 'Settings',  href: '/app/settings'  },

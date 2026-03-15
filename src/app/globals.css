@@ -13,7 +13,7 @@
     --popover: 0 0% 14%;
     --popover-foreground: 220 9% 91%;
 
-    --primary: 166 18% 70%;
+    --primary: 195 21% 70%;
     --primary-foreground: 0 0% 10%;
 
     --secondary: 0 0% 100%;
@@ -22,7 +22,7 @@
     --muted: 220 6% 32%;
     --muted-foreground: 220 8% 65%;
 
-    --accent: 166 18% 70%;
+    --accent: 195 21% 70%;
     --accent-foreground: 0 0% 10%;
 
     --destructive: 0 63% 50%;
@@ -30,7 +30,7 @@
 
     --border: 0 0% 100% / 0.06;
     --input: 0 0% 100% / 0.06;
-    --ring: 166 18% 70%;
+    --ring: 195 21% 70%;
 
     --radius: 1.25rem;
 
@@ -39,12 +39,12 @@
 
     --sidebar-background: 0 0% 8%;
     --sidebar-foreground: 220 8% 65%;
-    --sidebar-primary: 166 18% 70%;
+    --sidebar-primary: 195 21% 70%;
     --sidebar-primary-foreground: 0 0% 10%;
     --sidebar-accent: 0 0% 100% / 0.06;
     --sidebar-accent-foreground: 220 9% 91%;
     --sidebar-border: 0 0% 100% / 0.06;
-    --sidebar-ring: 166 18% 70%;
+    --sidebar-ring: 195 21% 70%;
   }
 }
 
@@ -75,6 +75,8 @@
       0 0 0 1px hsl(0 0% 100% / 0.04),
       inset 0 1px 0 0 hsl(0 0% 100% / 0.04),
       0 8px 40px -12px rgba(0, 0, 0, 0.5);
+    isolation: isolate;
+    transform: translateZ(0);
   }
 
   .bento-card-hover {
@@ -108,6 +110,26 @@
   .tabular-time {
     font-feature-settings: 'tnum';
     font-variant-numeric: tabular-nums;
+  }
+
+  .calendar-scroll {
+    /* clip scroll content to rounded corners */
+    border-radius: inherit;
+  }
+  .calendar-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+  .calendar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+  .calendar-scroll::-webkit-scrollbar-thumb {
+    background: hsl(0 0% 100% / 0.12);
+    border-radius: 999px;
+  }
+  .calendar-scroll::-webkit-scrollbar-thumb:hover {
+    background: hsl(0 0% 100% / 0.22);
   }
 
   .glow-primary {

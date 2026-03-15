@@ -43,10 +43,7 @@ const CircularProgress = ({
         strokeDasharray={circumference}
         strokeDashoffset={offset}
         style={{
-          transition: animate
-            ? 'stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)'
-            : 'stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-          filter: animate ? 'drop-shadow(0 0 8px hsl(166 28% 62% / 0.4))' : 'none',
+          transition: 'stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       />
     </svg>
@@ -60,7 +57,7 @@ function formatTime(totalSeconds: number): string {
   return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
-export default function TimerCard() {
+export default function TimerCard({ compact = false }: { compact?: boolean }) {
   const {
     isRunning, isStarting, isStopping, elapsedTime,
     selectedProject, description,
@@ -88,39 +85,44 @@ export default function TimerCard() {
     try { await stopTimer() } catch {}
   }, [stopTimer])
 
+  const ringSize = compact ? 140 : 200
+  const ringStroke = compact ? 9 : 12
+  const btnInset = compact ? 'm-[13px]' : 'm-[18px]'
+  const iconSize = compact ? 22 : 32
+  const btnPad = compact ? 'p-3' : 'p-5'
+
   return (
-    <div className="bento-card p-6 lg:p-8 flex flex-col items-center justify-center text-center gap-5 animate-fade-in h-full" style={{ animationDelay: '50ms' }}>
+    <div className={`bento-card flex flex-col items-center justify-center text-center animate-fade-in h-full ${compact ? 'gap-2 p-4' : 'gap-5 p-6 lg:p-8'}`} style={{ animationDelay: '50ms' }}>
 
       {/* Header */}
       <div>
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Live Timer</p>
-        <p className="text-[10px] text-muted-foreground/60 mt-1">
-          {isRunning ? 'Session active' : 'Ready to focus'}
-        </p>
+        {!compact && (
+          <p className="text-[10px] text-muted-foreground/60 mt-1">
+            {isRunning ? 'Session active' : 'Ready to focus'}
+          </p>
+        )}
       </div>
 
       {/* Ring with large button inside */}
       <div className="relative">
-        <CircularProgress percentage={percentage} size={200} strokeWidth={12} animate={isRunning} />
-        {/* Clickable area fills the inside of the ring */}
+        <CircularProgress percentage={percentage} size={ringSize} strokeWidth={ringStroke} animate={isRunning} />
         <button
           onClick={toggleTimer}
           disabled={isStarting || isStopping}
-          className={`absolute inset-0 flex items-center justify-center rounded-full m-[18px] transition-all duration-300 disabled:opacity-40 ${
+          className={`absolute inset-0 flex items-center justify-center rounded-full ${btnInset} transition-all duration-300 disabled:opacity-40 ${
             isRunning ? 'bg-primary/8 hover:bg-primary/15' : 'bg-muted/8 hover:bg-primary/8'
           }`}
           aria-label={isRunning ? 'Pause timer' : 'Start timer'}
         >
-          <div
-            className="bg-primary rounded-full p-5 text-primary-foreground transition-all duration-200 hover:scale-105 active:scale-95 glow-primary"
-          >
+          <div className={`bg-primary rounded-full ${btnPad} text-primary-foreground transition-all duration-200 hover:scale-105 active:scale-95 glow-primary`}>
             {isRunning ? (
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+              <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="currentColor">
                 <rect x="6" y="4" width="4" height="16" rx="1" />
                 <rect x="14" y="4" width="4" height="16" rx="1" />
               </svg>
             ) : (
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+              <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="currentColor">
                 <path d="M8 5.14v14l11-7-11-7z" />
               </svg>
             )}
@@ -129,7 +131,7 @@ export default function TimerCard() {
       </div>
 
       {/* Time — below ring */}
-      <p className="tabular-time text-5xl lg:text-6xl font-extralight tracking-tighter text-foreground select-none">
+      <p className={`tabular-time font-extralight tracking-tighter text-foreground select-none ${compact ? 'text-3xl' : 'text-5xl lg:text-6xl'}`}>
         {formatTime(elapsedTime)}
       </p>
 
@@ -140,14 +142,14 @@ export default function TimerCard() {
         onChange={e => updateDescription(e.target.value)}
         onKeyDown={e => { if (e.key === 'Enter' && !isRunning && !isStarting) toggleTimer() }}
         placeholder="What are you working on?"
-        className="bg-transparent text-base font-light text-center w-full max-w-xs focus:outline-none placeholder:text-muted-foreground/40 text-foreground border-b pb-2 transition-colors"
+        className="bg-transparent text-sm font-light text-center w-full focus:outline-none placeholder:text-muted-foreground/40 text-foreground border-b pb-1.5 transition-colors"
         style={{ borderColor: 'hsl(0 0% 100% / 0.5)' }}
         onFocus={e => (e.currentTarget.style.borderColor = 'hsl(var(--primary) / 0.4)')}
         onBlur={e => (e.currentTarget.style.borderColor = 'hsl(0 0% 100% / 0.5)')}
       />
 
       {/* Project chip + end session */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 flex-wrap justify-center">
         {selectedProject ? (
           <button
             onClick={() => setSelectedProject(null)}
@@ -177,7 +179,7 @@ export default function TimerCard() {
           <button
             onClick={endSession}
             disabled={isStopping}
-            className="text-[11px] font-medium px-4 py-1.5 rounded-full transition-colors active:scale-95 disabled:opacity-40"
+            className="text-[11px] font-medium px-3 py-1.5 rounded-full transition-colors active:scale-95 disabled:opacity-40"
             style={{ background: 'hsl(var(--muted) / 0.15)', color: 'hsl(var(--muted-foreground))' }}
             onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'hsl(var(--muted) / 0.25)'}
             onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'hsl(var(--muted) / 0.15)'}

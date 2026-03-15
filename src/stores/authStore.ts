@@ -96,8 +96,12 @@ export const useAuthStore = create<AuthStore>()(
             })
 
             // Optional: Call logout endpoint to invalidate tokens on server
-            api.post('/auth/logout').catch(() => {
-              // Ignore errors on logout endpoint
+            // Use raw fetch to avoid the api interceptor triggering another logout loop
+            const token = localStorage.getItem('access_token')
+            fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'}/auth/logout`, {
+              method: 'POST',
+              headers: token ? { Authorization: `Bearer ${token}` } : {},
+            }).catch(() => {
               console.warn('Failed to invalidate tokens on server')
             })
           } catch (error) {

@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: zentracker-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: zentracker
+    ports:
+      - "5432:5432"
+    volumes:
+      - zentracker_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  zentracker_pgdata:
