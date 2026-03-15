@@ -9,7 +9,7 @@ export function ToastContainer() {
   const { toasts, hideToast } = useDataStore()
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2">
+    <div className="fixed bottom-6 left-24 z-50 flex flex-col gap-3 items-start">
       {toasts.map((toast) => (
         <ToastItem
           key={toast.id}
@@ -35,7 +35,7 @@ function ToastItem({ toast, onClose }: ToastItemProps) {
   }, [toast.duration, onClose])
 
   const getToastStyles = () => {
-    const base = 'max-w-sm w-full glass-card shadow-2xl pointer-events-auto'
+    const base = 'w-80 glass-card shadow-2xl pointer-events-auto'
 
     switch (toast.type) {
       case 'success':
@@ -76,7 +76,7 @@ function ToastItem({ toast, onClose }: ToastItemProps) {
           </div>
 
           {/* Content */}
-          <div className="ml-3 w-0 flex-1 pt-0.5">
+          <div className="ml-3 flex-1 min-w-0 pt-0.5">
             <p className="text-sm font-medium text-foreground">
               {toast.title}
             </p>

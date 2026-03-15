@@ -20,7 +20,7 @@ interface DataStore extends DataState {
   fetchRecentEntries: (limit?: number) => Promise<void>
   fetchTimeEntries: (filters?: TimeEntryFilters) => Promise<PaginatedResponse<TimeEntry>>
   createTimeEntry: (entry: any) => Promise<TimeEntry>
-  updateTimeEntry: (id: string, updates: any) => Promise<TimeEntry>
+  updateTimeEntry: (id: string, updates: any, silent?: boolean) => Promise<TimeEntry>
   deleteTimeEntry: (id: string) => Promise<void>
 
   // Projects actions
@@ -152,7 +152,10 @@ export const useDataStore = create<DataStore>()(
 
           return newEntry
         } catch (error: any) {
-          const errorMessage = error.data?.detail || 'Failed to create time entry'
+          const detail = error.data?.detail
+          const errorMessage = Array.isArray(detail)
+            ? detail.map((e: any) => e.msg ?? String(e)).join('; ')
+            : (typeof detail === 'string' ? detail : 'Failed to create time entry')
           get().showToast({
             type: 'error',
             title: 'Failed to create entry',
@@ -162,7 +165,7 @@ export const useDataStore = create<DataStore>()(
         }
       },
 
-      updateTimeEntry: async (id: string, updates: any) => {
+      updateTimeEntry: async (id: string, updates: any, silent = false) => {
         try {
           const updatedEntry = await api.put<TimeEntry>(`/time-entries/${id}`, updates)
 
@@ -175,15 +178,20 @@ export const useDataStore = create<DataStore>()(
             set({ recentEntries: newEntries })
           }
 
-          get().showToast({
-            type: 'success',
-            title: 'Time entry updated',
-            description: 'Your changes have been saved successfully.',
-          })
+          if (!silent) {
+            get().showToast({
+              type: 'success',
+              title: 'Time entry updated',
+              description: 'Your changes have been saved successfully.',
+            })
+          }
 
           return updatedEntry
         } catch (error: any) {
-          const errorMessage = error.data?.detail || 'Failed to update time entry'
+          const detail = error.data?.detail
+          const errorMessage = Array.isArray(detail)
+            ? detail.map((e: any) => e.msg ?? String(e)).join('; ')
+            : (typeof detail === 'string' ? detail : 'Failed to update time entry')
           get().showToast({
             type: 'error',
             title: 'Failed to update entry',
