@@ -1,10 +1,51 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Clock, Search, Trash2, Pencil, DollarSign, ChevronDown } from 'lucide-react'
+import { Clock, Search, Trash2, Pencil, DollarSign, ChevronDown, Download } from 'lucide-react'
 import { useDataStore } from '@/stores'
 import type { TimeEntry, Project } from '@/types'
 import { api } from '@/lib/api'
+
+function exportToCSV(entries: TimeEntry[], projects: Project[]) {
+  const rows: string[][] = [
+    ['Date', 'Start', 'End', 'Duration (h)', 'Description', 'Project', 'Billable'],
+  ]
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const fmtDate = (dt: string | Date) => {
+    const d = new Date(dt)
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  }
+  const fmtTime = (dt: string | Date) => {
+    const d = new Date(dt)
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}`
+  }
+  const fmtDur = (secs: number) => (secs / 3600).toFixed(2)
+
+  entries
+    .slice()
+    .sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
+    .forEach(e => {
+      const proj = projects.find(p => p.id === e.project_id)
+      rows.push([
+        fmtDate(e.start_time),
+        fmtTime(e.start_time),
+        fmtTime(e.end_time),
+        fmtDur(e.duration || 0),
+        e.description ?? '',
+        proj?.name ?? '',
+        e.is_billable ? 'Yes' : 'No',
+      ])
+    })
+
+  const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `time-entries-${fmtDate(new Date())}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
 function fmtDuration(secs: number) {
   if (!secs || secs <= 0) return '—'
@@ -108,11 +149,22 @@ export default function HistoryPage() {
       <div className="max-w-4xl mx-auto space-y-5">
 
         {/* Header */}
-        <div>
-          <h1 className="text-xl font-semibold text-foreground">History</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {filtered.length} entr{filtered.length !== 1 ? 'ies' : 'y'} · {fmtDuration(filtered.reduce((s, e) => s + (e.duration || 0), 0))} total
-          </p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-xl font-semibold text-foreground">History</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {filtered.length} entr{filtered.length !== 1 ? 'ies' : 'y'} · {fmtDuration(filtered.reduce((s, e) => s + (e.duration || 0), 0))} total
+            </p>
+          </div>
+          {filtered.length > 0 && (
+            <button
+              onClick={() => exportToCSV(filtered, projects)}
+              className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl border border-border/40 bg-white/[0.04] text-muted-foreground hover:text-foreground hover:bg-white/[0.07] transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Export CSV
+            </button>
+          )}
         </div>
 
         {/* Filters */}

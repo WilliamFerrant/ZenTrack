@@ -60,9 +60,10 @@ function formatTime(totalSeconds: number): string {
 export default function TimerCard({ compact = false }: { compact?: boolean }) {
   const {
     isRunning, isStarting, isStopping, elapsedTime,
-    selectedProject, description,
-    setSelectedProject, updateDescription, startTimer, stopTimer,
+    currentTimer, selectedProject, description,
+    setSelectedProject, updateDescription, startTimer, stopTimer, pauseTimer, resumeTimer,
   } = useTimerStore()
+  const isPaused = currentTimer?.is_paused ?? false
   const { projects } = useDataStore()
 
   const targetSeconds = 8 * 3600
@@ -70,8 +71,10 @@ export default function TimerCard({ compact = false }: { compact?: boolean }) {
 
   const toggleTimer = useCallback(async () => {
     try {
-      if (isRunning) {
-        await stopTimer()
+      if (isRunning && !isPaused) {
+        await pauseTimer()
+      } else if (isRunning && isPaused) {
+        await resumeTimer()
       } else {
         await startTimer({
           project_id: selectedProject?.id,
@@ -79,7 +82,7 @@ export default function TimerCard({ compact = false }: { compact?: boolean }) {
         })
       }
     } catch {}
-  }, [isRunning, startTimer, stopTimer, selectedProject, description])
+  }, [isRunning, isPaused, startTimer, pauseTimer, resumeTimer, selectedProject, description])
 
   const endSession = useCallback(async () => {
     try { await stopTimer() } catch {}
@@ -98,8 +101,8 @@ export default function TimerCard({ compact = false }: { compact?: boolean }) {
       <div>
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Live Timer</p>
         {!compact && (
-          <p className="text-[10px] text-muted-foreground/60 mt-1">
-            {isRunning ? 'Session active' : 'Ready to focus'}
+          <p className={`text-[10px] mt-1 ${isPaused ? 'text-yellow-400/80' : 'text-muted-foreground/60'}`}>
+            {isPaused ? 'Paused' : isRunning ? 'Session active' : 'Ready to focus'}
           </p>
         )}
       </div>
@@ -113,10 +116,10 @@ export default function TimerCard({ compact = false }: { compact?: boolean }) {
           className={`absolute inset-0 flex items-center justify-center rounded-full ${btnInset} transition-all duration-300 disabled:opacity-40 ${
             isRunning ? 'bg-primary/8 hover:bg-primary/15' : 'bg-muted/8 hover:bg-primary/8'
           }`}
-          aria-label={isRunning ? 'Pause timer' : 'Start timer'}
+          aria-label={isRunning && !isPaused ? 'Pause timer' : isPaused ? 'Resume timer' : 'Start timer'}
         >
-          <div className={`bg-primary rounded-full ${btnPad} text-primary-foreground transition-all duration-200 hover:scale-105 active:scale-95 glow-primary`}>
-            {isRunning ? (
+          <div className={`rounded-full ${btnPad} text-primary-foreground transition-all duration-200 hover:scale-105 active:scale-95 glow-primary ${isPaused ? 'bg-yellow-500/80' : 'bg-primary'}`}>
+            {isRunning && !isPaused ? (
               <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="currentColor">
                 <rect x="6" y="4" width="4" height="16" rx="1" />
                 <rect x="14" y="4" width="4" height="16" rx="1" />

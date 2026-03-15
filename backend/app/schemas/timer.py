@@ -33,10 +33,11 @@ class Timer(TimerBase, TimestampSchema):
 
     start_time: datetime
     is_running: bool
+    is_paused: bool = False
     user_id: int
     project_id: int
     task_id: Optional[int] = None
-    current_duration: int  # duration in seconds
+    current_duration: int  # active duration in seconds (excludes paused time)
 
     class Config:
         """Pydantic configuration."""

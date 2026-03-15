@@ -49,11 +49,11 @@ class Project(Base, TimestampMixin):
 
     # Foreign keys
     organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=False)
-    client_id = Column(Integer, nullable=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=True)
 
     # Relationships
     organization = relationship("Organization", back_populates="projects")
-    # client = relationship("Client", back_populates="projects")
+    client = relationship("Client", back_populates="projects")
     tasks = relationship("Task", back_populates="project", cascade="all, delete-orphan")
     time_entries = relationship("TimeEntry", back_populates="project", cascade="all, delete-orphan")
     timers = relationship("Timer", back_populates="project", cascade="all, delete-orphan")

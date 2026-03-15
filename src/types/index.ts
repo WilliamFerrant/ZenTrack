@@ -41,7 +41,10 @@ export interface Client {
   id: string
   name: string
   email?: string
-  description?: string
+  phone?: string
+  address?: string
+  website?: string
+  notes?: string
   is_active: boolean
   organization_id: string
   created_at: Date
@@ -94,27 +97,25 @@ export interface Task {
   is_completed?: boolean
 }
 
-export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'REVIEW' | 'COMPLETED'
+export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE' | 'CANCELLED'
 export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
 
 export interface Timer {
   id: string
   start_time: Date
   is_running: boolean
+  is_paused: boolean
   description?: string
   user_id: string
   project_id?: string
   task_id?: string
+  current_duration: number  // active seconds from backend
   created_at: Date
   updated_at: Date
 
   // Relations (populated when needed)
   project?: Project
   task?: Task
-
-  // Computed fields for UI
-  elapsed_seconds?: number
-  display_time?: string // HH:MM:SS format
 }
 
 export interface TimeEntry {
@@ -264,6 +265,7 @@ export interface DashboardSummary {
     non_billable_time: number // seconds
     total_entries: number
     active_days: number
+    total_revenue: number // currency units
   }
 
   daily_breakdown: Array<{
@@ -274,9 +276,10 @@ export interface DashboardSummary {
   }>
 
   project_breakdown: Array<{
-    project: Project
+    project: Project & { hourly_rate?: number }
     total_time: number
     billable_time: number
+    revenue: number
     percentage: number
   }>
 

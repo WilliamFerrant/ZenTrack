@@ -6,6 +6,7 @@ import { ToastContainer } from '../ui/ToastContainer'
 import { ModalContainer } from '../ui/ModalContainer'
 import { NetworkStatusIndicator } from '../ui/NetworkStatusIndicator'
 import { useAppInitialization } from '@/stores'
+import { useTimerReminder } from '@/hooks/useTimerReminder'
 
 export interface AppLayoutProps {
   children: ReactNode
@@ -13,6 +14,7 @@ export interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const { isAuthenticated, initializeApp } = useAppInitialization()
+  useTimerReminder()
 
   useEffect(() => {
     if (isAuthenticated) initializeApp().catch(console.error)

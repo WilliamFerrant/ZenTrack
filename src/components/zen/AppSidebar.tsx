@@ -1,21 +1,26 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutGrid, FolderOpen, BarChart2, Clock, Settings } from 'lucide-react'
+import { LayoutGrid, FolderOpen, BarChart2, Clock, Settings, Building2, Users, ClipboardList } from 'lucide-react'
 import { useAuthStore } from '@/stores'
-
-const NAV = [
-  { icon: LayoutGrid, label: 'Dashboard', href: '/app/dashboard' },
-  { icon: FolderOpen, label: 'Projects',  href: '/app/projects'  },
-  { icon: BarChart2,  label: 'Reports',   href: '/app/reports'   },
-  { icon: Clock,      label: 'History',   href: '/app/history'   },
-  { icon: Settings,   label: 'Settings',  href: '/app/settings'  },
-]
+import { usePermissions } from '@/hooks/usePermissions'
 
 export default function AppSidebar() {
   const pathname = usePathname()
   const router   = useRouter()
   const { user, logout } = useAuthStore()
+  const perms = usePermissions()
+
+  const NAV = [
+    { icon: LayoutGrid,    label: 'Dashboard',  href: '/app/dashboard', show: true },
+    { icon: FolderOpen,    label: 'Projects',   href: '/app/projects',  show: perms.canManageProjects },
+    { icon: Building2,     label: 'Clients',    href: '/app/clients',   show: perms.canManageClients },
+    { icon: Users,         label: 'Team',       href: '/app/team',      show: perms.canViewTeam },
+    { icon: ClipboardList, label: 'Timesheets', href: '/app/timesheets',show: perms.canViewTimesheets },
+    { icon: BarChart2,     label: 'Reports',    href: '/app/reports',   show: perms.canViewReports },
+    { icon: Clock,         label: 'History',    href: '/app/history',   show: perms.canEdit },
+    { icon: Settings,      label: 'Settings',   href: '/app/settings',  show: true },
+  ].filter(item => item.show)
 
   const initial = (user?.first_name?.[0] ?? 'U').toUpperCase()
 

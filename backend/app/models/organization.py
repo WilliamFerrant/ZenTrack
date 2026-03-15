@@ -23,3 +23,4 @@ class Organization(Base, TimestampMixin):
     # Relationships
     users = relationship("User", back_populates="organization")
     projects = relationship("Project", back_populates="organization", cascade="all, delete-orphan")
+    clients = relationship("Client", back_populates="organization", cascade="all, delete-orphan")

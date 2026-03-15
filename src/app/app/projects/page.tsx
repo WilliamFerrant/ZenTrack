@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, FolderOpen, Pencil, DollarSign, ExternalLink, Circle } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Plus, FolderOpen, DollarSign } from 'lucide-react'
 import { useDataStore } from '@/stores'
 import type { Project } from '@/types'
 
@@ -234,8 +235,9 @@ export default function ProjectsPage() {
 }
 
 function ProjectCard({ project }: { project: Project }) {
+  const router = useRouter()
   return (
-    <div className="bento-card bento-card-hover p-4 flex flex-col gap-3">
+    <div onClick={() => router.push(`/app/projects/${project.id}`)} className="bento-card bento-card-hover p-4 flex flex-col gap-3 cursor-pointer">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
           <div

@@ -7,10 +7,12 @@ from sqlalchemy.orm import Session
 
 from app.api.api_v1.endpoints.auth import get_current_user
 from app.db.database import get_db
+from app.models.timer import Timer as TimerModel
 from app.models.user import User
 from app.schemas.timer import Timer, TimerCreate, TimerStop
 from app.schemas.time_entry import TimeEntry
 from app.services.time_tracking_service import TimeTrackingService
+from sqlalchemy import and_
 
 router = APIRouter()
 
@@ -104,6 +106,44 @@ def get_active_timer(
     Returns None if no timer is currently running.
     """
     timer = service.get_active_timer(current_user.id)
+    return timer
+
+
+@router.post("/pause", response_model=Timer)
+def pause_timer(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Pause the currently running timer."""
+    timer = db.query(TimerModel).filter(
+        and_(TimerModel.user_id == current_user.id, TimerModel.is_running == True)
+    ).first()
+    if not timer:
+        raise HTTPException(status_code=400, detail="No active timer found")
+    if timer.is_paused:
+        raise HTTPException(status_code=400, detail="Timer is already paused")
+    timer.pause()
+    db.commit()
+    db.refresh(timer)
+    return timer
+
+
+@router.post("/resume", response_model=Timer)
+def resume_timer(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Resume a paused timer."""
+    timer = db.query(TimerModel).filter(
+        and_(TimerModel.user_id == current_user.id, TimerModel.is_running == True)
+    ).first()
+    if not timer:
+        raise HTTPException(status_code=400, detail="No active timer found")
+    if not timer.is_paused:
+        raise HTTPException(status_code=400, detail="Timer is not paused")
+    timer.resume()
+    db.commit()
+    db.refresh(timer)
     return timer
 
 

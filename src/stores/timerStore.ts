@@ -152,29 +152,26 @@ export const useTimerStore = create<TimerStore>()(
       },
 
       pauseTimer: async () => {
-        // For MVP, we'll implement this as stop/start pattern
-        // Future enhancement: proper pause/resume with backend support
         try {
           const state = get()
-          if (!state.isRunning) return
-
-          // TODO: Implement proper pause endpoint
-          console.warn('Pause functionality not implemented in MVP')
-        } catch (error) {
-          console.error('Pause timer failed:', error)
+          if (!state.isRunning || state.currentTimer?.is_paused) return
+          const timer = await api.post<Timer>('/timers/pause', {})
+          get()._stopElapsedTimer()
+          set({ currentTimer: timer })
+        } catch (error: any) {
+          set({ error: error.data?.detail || 'Failed to pause timer' })
         }
       },
 
       resumeTimer: async () => {
-        // For MVP, manual start required
         try {
           const state = get()
-          if (state.isRunning) return
-
-          // TODO: Implement proper resume endpoint
-          console.warn('Resume functionality not implemented in MVP')
-        } catch (error) {
-          console.error('Resume timer failed:', error)
+          if (!state.currentTimer?.is_paused) return
+          const timer = await api.post<Timer>('/timers/resume', {})
+          set({ currentTimer: timer })
+          get()._startElapsedTimer()
+        } catch (error: any) {
+          set({ error: error.data?.detail || 'Failed to resume timer' })
         }
       },
 
@@ -191,11 +188,9 @@ export const useTimerStore = create<TimerStore>()(
 
       updateElapsedTime: () => {
         const state = get()
-        if (state.isRunning && state.currentTimer) {
-          const startTime = new Date(state.currentTimer.start_time)
-          const now = new Date()
-          const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000)
-          set({ elapsedTime: elapsed })
+        if (state.isRunning && state.currentTimer && !state.currentTimer.is_paused) {
+          // Increment by 1 second each tick — base was set from server's current_duration on load
+          set(s => ({ elapsedTime: s.elapsedTime + 1 }))
         }
       },
 
@@ -225,22 +220,15 @@ export const useTimerStore = create<TimerStore>()(
           const timer = await api.get<Timer>('/timers/active')
 
           if (timer) {
-            // Force UTC parse: backend returns naive datetime strings without 'Z'
-            const rawStart = String(timer.start_time)
-            const utcString = rawStart.endsWith('Z') || rawStart.includes('+') ? rawStart : rawStart + 'Z'
-            const startTime = new Date(utcString)
-            const now = new Date()
-            const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000)
-
             set({
               currentTimer: timer,
               isRunning: timer.is_running,
-              elapsedTime: elapsed,
+              elapsedTime: timer.current_duration ?? 0,
               description: timer.description || '',
             })
 
-            // Start elapsed timer if running
-            if (timer.is_running) {
+            // Start elapsed ticker only if running and not paused
+            if (timer.is_running && !timer.is_paused) {
               get()._startElapsedTimer()
             }
           } else {

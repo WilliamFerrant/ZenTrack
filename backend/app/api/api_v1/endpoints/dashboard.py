@@ -54,6 +54,17 @@ def get_dashboard_summary(
     billable_time = sum(e.duration for e in entries if e.is_billable)
     active_days = len({e.start_time.date() for e in entries})
 
+    # Revenue: use entry hourly_rate if set, else fall back to project rate
+    def _entry_revenue(e: TimeEntry) -> float:
+        if not e.is_billable:
+            return 0.0
+        rate = float(e.hourly_rate) if e.hourly_rate else (
+            float(e.project.hourly_rate) if e.project and e.project.hourly_rate else 0.0
+        )
+        return rate * (e.duration / 3600)
+
+    total_revenue = round(sum(_entry_revenue(e) for e in entries), 2)
+
     # Daily breakdown
     daily: Dict[date, dict] = defaultdict(lambda: {"total_time": 0, "billable_time": 0, "entries_count": 0})
     for e in entries:
@@ -68,10 +79,11 @@ def get_dashboard_summary(
     ]
 
     # Project breakdown
-    proj_map: Dict[int, dict] = defaultdict(lambda: {"total_time": 0, "billable_time": 0, "project": None})
+    proj_map: Dict[int, dict] = defaultdict(lambda: {"total_time": 0, "billable_time": 0, "revenue": 0.0, "project": None})
     for e in entries:
         proj_map[e.project_id]["total_time"] += e.duration
         proj_map[e.project_id]["billable_time"] += e.duration if e.is_billable else 0
+        proj_map[e.project_id]["revenue"] += _entry_revenue(e)
         if proj_map[e.project_id]["project"] is None:
             proj_map[e.project_id]["project"] = e.project
 
@@ -85,12 +97,14 @@ def get_dashboard_summary(
                 "id": p.id,
                 "name": p.name,
                 "color": p.color or "#6366f1",
+                "hourly_rate": float(p.hourly_rate) if p.hourly_rate else None,
                 "status": p.status.value if p.status else "ACTIVE",
                 "is_billable": p.is_billable,
                 "is_active": p.is_active,
             },
             "total_time": v["total_time"],
             "billable_time": v["billable_time"],
+            "revenue": round(v["revenue"], 2),
             "percentage": round(v["total_time"] / total_time * 100, 1) if total_time else 0,
         })
 
@@ -114,6 +128,7 @@ def get_dashboard_summary(
             "non_billable_time": total_time - billable_time,
             "total_entries": len(entries),
             "active_days": active_days,
+            "total_revenue": total_revenue,
         },
         "daily_breakdown": daily_breakdown,
         "project_breakdown": project_breakdown,
