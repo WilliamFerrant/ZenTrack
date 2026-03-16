@@ -14,7 +14,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import all models to ensure they are registered with SQLAlchemy
-from app.models import Base, Organization, OrganizationMember, Client, User, Project, Task, Timer, TimeEntry, Timesheet
+from app.models import Base, Organization, OrganizationMember, Team, TeamMember, Client, User, Project, Task, Timer, TimeEntry, Timesheet
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

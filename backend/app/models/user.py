@@ -48,7 +48,8 @@ class User(Base, TimestampMixin):
 
     # Relationships
     organization = relationship("Organization", back_populates="users")
-    org_memberships = relationship("OrganizationMember", back_populates="user", cascade="all, delete-orphan")
+    org_memberships  = relationship("OrganizationMember", back_populates="user", cascade="all, delete-orphan")
+    team_memberships = relationship("TeamMember", back_populates="user", cascade="all, delete-orphan")
     assigned_tasks = relationship("Task", back_populates="assignee")
     timers = relationship("Timer", back_populates="user", cascade="all, delete-orphan")
     time_entries = relationship("TimeEntry", back_populates="user", cascade="all, delete-orphan")
