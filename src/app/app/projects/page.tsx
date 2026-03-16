@@ -481,7 +481,7 @@ export default function ProjectsPage() {
           <div className="relative bento-card p-6 w-full max-w-sm rounded-2xl shadow-xl" onClick={e => e.stopPropagation()}>
             <h2 className="text-base font-semibold text-foreground mb-2">Delete project?</h2>
             <p className="text-sm text-muted-foreground mb-5">
-              <span className="text-foreground font-medium">"{deleteProject.name}"</span> will be archived and removed from the list. Time entries are preserved.
+              <span className="text-foreground font-medium">&quot;{deleteProject.name}&quot;</span> will be archived and removed from the list. Time entries are preserved.
             </p>
             <div className="flex gap-2">
               <button onClick={() => setDeleteProject(null)} className="flex-1 text-sm py-2 rounded-xl border border-border/40 text-muted-foreground hover:text-foreground transition-colors">

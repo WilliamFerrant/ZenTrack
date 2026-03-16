@@ -369,7 +369,7 @@ export default function TeamPage() {
             <Field label="Name"><input className="form-input" autoFocus value={orgForm.name} onChange={e => setOrgForm(p => ({ ...p, name: e.target.value }))} placeholder="Acme Inc." /></Field>
             <Field label="Description"><input className="form-input" value={orgForm.description} onChange={e => setOrgForm(p => ({ ...p, description: e.target.value }))} placeholder="Optional" /></Field>
             <Field label="Website"><input className="form-input" value={orgForm.website} onChange={e => setOrgForm(p => ({ ...p, website: e.target.value }))} placeholder="https://…" /></Field>
-            <p className="text-xs text-muted-foreground">You'll be set as admin. Your active organization will switch to this one.</p>
+            <p className="text-xs text-muted-foreground">You&apos;ll be set as admin. Your active organization will switch to this one.</p>
           </div>
           <div className="flex gap-2 mt-5">
             <button onClick={() => setShowCreateOrg(false)} className="flex-1 text-sm py-2 rounded-xl border border-border/40 text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
