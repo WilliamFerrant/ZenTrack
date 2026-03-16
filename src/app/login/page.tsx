@@ -32,8 +32,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex bg-zinc-900 items-center justify-center py-12 px-4">
-      <div className="w-full max-w-md bg-zinc-900/50 border border-zinc-800 rounded-2xl p-8 shadow-xl">
+    <div className="min-h-screen flex bg-background items-center justify-center py-12 px-4">
+      <div className="w-full max-w-md bg-white/[0.04] border border-white/[0.08] rounded-2xl p-8 shadow-xl">
         <LoginForm />
       </div>
     </div>

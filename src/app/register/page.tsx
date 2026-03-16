@@ -39,7 +39,7 @@ export default function RegisterPage() {
 
   if (isLoading || isAuthenticated) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-zinc-900">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
       </div>
     )
@@ -84,18 +84,18 @@ export default function RegisterPage() {
   }
 
   const inputClass = (hasError: boolean) =>
-    `w-full px-4 py-3 bg-zinc-800 border rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-      hasError ? 'border-red-500/50' : 'border-zinc-700'
+    `w-full px-4 py-3 bg-white/[0.06] border rounded-xl text-foreground placeholder-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-colors ${
+      hasError ? 'border-red-500/50' : 'border-border/40'
     }`
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-900 py-12 px-4">
-      <div className="w-full max-w-md bg-zinc-900/50 border border-zinc-800 rounded-2xl p-8 shadow-xl">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4">
+      <div className="w-full max-w-md bg-white/[0.04] border border-white/[0.08] rounded-2xl p-8 shadow-xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-1">ZenTracker</h1>
-          <h2 className="text-lg font-semibold text-zinc-200 mb-1">Create your account</h2>
-          <p className="text-zinc-400 text-sm">Start tracking your time for free</p>
+          <h1 className="text-3xl font-bold text-foreground mb-1">ZenTracker</h1>
+          <h2 className="text-lg font-semibold text-foreground mb-1">Create your account</h2>
+          <p className="text-muted-foreground text-sm">Start tracking your time for free</p>
         </div>
 
         {serverError && (
@@ -107,7 +107,7 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Full Name */}
           <div>
-            <label htmlFor="full_name" className="block text-sm font-medium text-zinc-300 mb-1.5">
+            <label htmlFor="full_name" className="block text-sm font-medium text-foreground/80 mb-1.5">
               Full name
             </label>
             <input
@@ -124,7 +124,7 @@ export default function RegisterPage() {
 
           {/* Email */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-zinc-300 mb-1.5">
+            <label htmlFor="email" className="block text-sm font-medium text-foreground/80 mb-1.5">
               Email address
             </label>
             <input
@@ -141,7 +141,7 @@ export default function RegisterPage() {
 
           {/* Password */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-zinc-300 mb-1.5">
+            <label htmlFor="password" className="block text-sm font-medium text-foreground/80 mb-1.5">
               Password
             </label>
             <div className="relative">
@@ -157,7 +157,7 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => setFormState(p => ({ ...p, showPassword: !p.showPassword }))}
-                className="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-400 hover:text-zinc-200 transition-colors text-sm font-medium"
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
               >
                 {formState.showPassword ? 'Hide' : 'Show'}
               </button>
@@ -167,7 +167,7 @@ export default function RegisterPage() {
 
           {/* Confirm Password */}
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-zinc-300 mb-1.5">
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground/80 mb-1.5">
               Confirm password
             </label>
             <input
@@ -186,7 +186,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-900 mt-2"
+            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-semibold rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background mt-2"
           >
             {isSubmitting ? (
               <span className="flex items-center justify-center gap-2">
@@ -198,7 +198,7 @@ export default function RegisterPage() {
             )}
           </button>
 
-          <p className="text-center text-sm text-zinc-500 pt-1">
+          <p className="text-center text-sm text-muted-foreground pt-1">
             Already have an account?{' '}
             <a href="/login" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
               Sign in
