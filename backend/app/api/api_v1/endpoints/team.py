@@ -1,5 +1,6 @@
-"""Team management endpoints."""
+"""Team management endpoints — multi-org aware."""
 
+import secrets
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -8,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.api.api_v1.endpoints.auth import get_current_user
 from app.db.database import get_db
+from app.models.organization_member import OrganizationMember
 from app.models.user import User, UserRole
 from app.schemas.user import UserResponse
 
@@ -21,10 +23,6 @@ class InviteMemberRequest(BaseModel):
     role: UserRole = UserRole.MEMBER
 
 
-class UpdateMemberRoleRequest(BaseModel):
-    role: UserRole
-
-
 class UpdateMemberRequest(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
@@ -32,21 +30,27 @@ class UpdateMemberRequest(BaseModel):
     is_active: Optional[bool] = None
 
 
+# ── List members of the active org ────────────────────────────────────────────
+
 @router.get("", response_model=List[UserResponse])
 def list_members(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """List all members in the current user's organization."""
     if not current_user.organization_id:
         return []
-    return (
-        db.query(User)
-        .filter(User.organization_id == current_user.organization_id)
-        .order_by(User.first_name)
+    memberships = (
+        db.query(OrganizationMember)
+        .filter(OrganizationMember.organization_id == current_user.organization_id)
         .all()
     )
+    user_ids = [m.user_id for m in memberships]
+    if not user_ids:
+        return []
+    return db.query(User).filter(User.id.in_(user_ids)).order_by(User.first_name).all()
 
+
+# ── Invite a member (or add an existing user) ─────────────────────────────────
 
 @router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def invite_member(
@@ -54,7 +58,6 @@ def invite_member(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Invite a new member to the organization (creates account with temp password)."""
     if not current_user.can_manage_organization():
         raise HTTPException(status_code=403, detail="Only admins and managers can invite members")
     if not current_user.organization_id:
@@ -62,17 +65,22 @@ def invite_member(
 
     existing = db.query(User).filter(User.email == data.email).first()
     if existing:
-        if existing.organization_id == current_user.organization_id:
-            raise HTTPException(status_code=409, detail="User already in organization")
-        # Re-assign existing user to this org
-        existing.organization_id = current_user.organization_id
-        existing.role = data.role
-        existing.is_active = True
+        already = db.query(OrganizationMember).filter(
+            OrganizationMember.user_id == existing.id,
+            OrganizationMember.organization_id == current_user.organization_id,
+        ).first()
+        if already:
+            raise HTTPException(status_code=409, detail="User already in this organization")
+        # Add membership without disturbing their active org
+        db.add(OrganizationMember(
+            user_id=existing.id,
+            organization_id=current_user.organization_id,
+            role=data.role,
+        ))
         db.commit()
         db.refresh(existing)
         return existing
 
-    import secrets
     from app.services.auth_service import AuthService
     auth_service = AuthService(db)
     temp_password = secrets.token_urlsafe(12)
@@ -82,12 +90,20 @@ def invite_member(
         first_name=data.first_name,
         last_name=data.last_name,
     )
+    # Set their active org to this one (first org they've joined)
     new_user.organization_id = current_user.organization_id
     new_user.role = data.role
+    db.add(OrganizationMember(
+        user_id=new_user.id,
+        organization_id=current_user.organization_id,
+        role=data.role,
+    ))
     db.commit()
     db.refresh(new_user)
     return new_user
 
+
+# ── Update a member's role or details ─────────────────────────────────────────
 
 @router.put("/{member_id}", response_model=UserResponse)
 def update_member(
@@ -96,34 +112,45 @@ def update_member(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Update a team member's role or details."""
     if not current_user.can_manage_organization():
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
-    member = db.query(User).filter(
-        User.id == member_id,
-        User.organization_id == current_user.organization_id,
+    membership = db.query(OrganizationMember).filter(
+        OrganizationMember.user_id == member_id,
+        OrganizationMember.organization_id == current_user.organization_id,
     ).first()
-    if not member:
-        raise HTTPException(status_code=404, detail="Member not found")
+    if not membership:
+        raise HTTPException(status_code=404, detail="Member not found in this organization")
 
-    # Prevent removing the last admin
-    if data.role and data.role != UserRole.ADMIN and member.role == UserRole.ADMIN:
-        admin_count = db.query(User).filter(
-            User.organization_id == current_user.organization_id,
-            User.role == UserRole.ADMIN,
-            User.is_active == True,
-        ).count()
-        if admin_count <= 1:
-            raise HTTPException(status_code=400, detail="Cannot demote the last admin")
+    member = db.query(User).filter(User.id == member_id).first()
 
-    for field, value in data.model_dump(exclude_unset=True).items():
-        setattr(member, field, value)
+    if data.role and data.role != membership.role:
+        # Prevent demoting the last admin
+        if membership.role == UserRole.ADMIN:
+            admin_count = db.query(OrganizationMember).filter(
+                OrganizationMember.organization_id == current_user.organization_id,
+                OrganizationMember.role == UserRole.ADMIN,
+            ).count()
+            if admin_count <= 1:
+                raise HTTPException(status_code=400, detail="Cannot demote the last admin")
+        membership.role = data.role
+        # Keep users.role in sync if this is their active org
+        if member.organization_id == current_user.organization_id:
+            member.role = data.role
+
+    if data.first_name is not None:
+        member.first_name = data.first_name
+    if data.last_name is not None:
+        member.last_name = data.last_name
+    if data.is_active is not None:
+        member.is_active = data.is_active
 
     db.commit()
     db.refresh(member)
     return member
 
+
+# ── Remove a member from this org ─────────────────────────────────────────────
 
 @router.delete("/{member_id}", status_code=status.HTTP_204_NO_CONTENT)
 def remove_member(
@@ -131,19 +158,28 @@ def remove_member(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Remove a member from the organization (soft deactivate)."""
     if not current_user.can_manage_organization():
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     if member_id == current_user.id:
         raise HTTPException(status_code=400, detail="Cannot remove yourself")
 
-    member = db.query(User).filter(
-        User.id == member_id,
-        User.organization_id == current_user.organization_id,
+    membership = db.query(OrganizationMember).filter(
+        OrganizationMember.user_id == member_id,
+        OrganizationMember.organization_id == current_user.organization_id,
     ).first()
-    if not member:
-        raise HTTPException(status_code=404, detail="Member not found")
+    if not membership:
+        raise HTTPException(status_code=404, detail="Member not found in this organization")
 
-    member.is_active = False
-    member.organization_id = None
+    db.delete(membership)
+
+    # If this was their active org, switch them to another org (or clear it)
+    member = db.query(User).filter(User.id == member_id).first()
+    if member and member.organization_id == current_user.organization_id:
+        other = db.query(OrganizationMember).filter(
+            OrganizationMember.user_id == member_id,
+            OrganizationMember.organization_id != current_user.organization_id,
+        ).first()
+        member.organization_id = other.organization_id if other else None
+        member.role = other.role if other else UserRole.MEMBER
+
     db.commit()

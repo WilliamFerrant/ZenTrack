@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { Play, FolderOpen, Plus, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Play, FolderOpen, Plus, X, ChevronDown, Check } from 'lucide-react'
 import { useDataStore, useTimerStore } from '@/stores'
 import { api } from '@/lib/api'
-import type { Project } from '@/types'
+import type { Client, Project } from '@/types'
 
 function fmtHm(sec: number) {
   const h = Math.floor(sec / 3600)
@@ -39,11 +39,62 @@ const MiniRing = ({ progress, color }: { progress: number; color?: string }) => 
 
 const COLORS = ['#7EB8C4', '#7EC47E', '#C4A77E', '#C47E7E', '#A77EC4', '#7E9EC4', '#C4C47E', '#7EC4B8']
 
+function ClientSelect({ clients, value, onChange }: { clients: Client[]; value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const selected = clients.find(c => String(c.id) === value)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-white/[0.04] border border-border/40 hover:border-border/70 text-sm transition-colors focus:outline-none focus:border-primary/50"
+      >
+        <span className={selected ? 'text-foreground' : 'text-muted-foreground/50'}>
+          {selected ? selected.name : 'No client'}
+        </span>
+        <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground/60 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="absolute top-full mt-1 w-full z-50 bento-card rounded-xl overflow-hidden shadow-xl border border-border/40 py-1">
+          {[{ id: '', name: 'No client' }, ...clients].map(c => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => { onChange(String(c.id)); setOpen(false) }}
+              className="w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-left hover:bg-white/[0.06] transition-colors"
+            >
+              <span className={value === String(c.id) ? 'text-foreground' : 'text-muted-foreground'}>{c.name}</span>
+              {value === String(c.id) && <Check className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function AddProjectModal({ onClose, onCreated }: { onClose: () => void; onCreated: (p: Project) => void }) {
   const [name, setName] = useState('')
   const [color, setColor] = useState(COLORS[0])
+  const [clientId, setClientId] = useState('')
+  const [hourlyRate, setHourlyRate] = useState('')
+  const [isBillable, setIsBillable] = useState(true)
+  const [clients, setClients] = useState<Client[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    api.get<Client[]>('/clients').then(setClients).catch(() => {})
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -51,7 +102,10 @@ function AddProjectModal({ onClose, onCreated }: { onClose: () => void; onCreate
     setSaving(true)
     setError('')
     try {
-      const project = await api.post<Project>('/projects', { name: name.trim(), color })
+      const body: Record<string, unknown> = { name: name.trim(), color, is_billable: isBillable }
+      if (clientId) body.client_id = Number(clientId)
+      if (hourlyRate) body.hourly_rate = Number(hourlyRate)
+      const project = await api.post<Project>('/projects', body)
       onCreated(project)
       onClose()
     } catch {
@@ -64,7 +118,7 @@ function AddProjectModal({ onClose, onCreated }: { onClose: () => void; onCreate
     <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
       <div className="absolute inset-0" style={{ background: 'hsl(0 0% 0% / 0.6)', backdropFilter: 'blur(4px)' }} />
       <div
-        className="bento-card p-6 w-80 relative z-10 flex flex-col gap-4"
+        className="bento-card p-6 w-96 relative z-10 flex flex-col gap-4"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
@@ -83,6 +137,13 @@ function AddProjectModal({ onClose, onCreated }: { onClose: () => void; onCreate
             className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground border-b border-border focus:border-primary outline-none pb-2 transition-colors"
           />
 
+          {/* Client */}
+          <div className="flex flex-col gap-1.5">
+            <p className="text-[11px] text-muted-foreground">Client</p>
+            <ClientSelect clients={clients} value={clientId} onChange={setClientId} />
+          </div>
+
+          {/* Color */}
           <div className="flex flex-col gap-2">
             <p className="text-[11px] text-muted-foreground">Color</p>
             <div className="flex gap-2 flex-wrap">
@@ -100,6 +161,34 @@ function AddProjectModal({ onClose, onCreated }: { onClose: () => void; onCreate
                 />
               ))}
             </div>
+          </div>
+
+          {/* Billable + rate */}
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 cursor-pointer flex-1">
+              <button
+                type="button"
+                onClick={() => setIsBillable(v => !v)}
+                className={`w-8 h-4 rounded-full transition-colors relative ${isBillable ? 'bg-primary' : 'bg-white/10'}`}
+              >
+                <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${isBillable ? 'left-4' : 'left-0.5'}`} />
+              </button>
+              <span className="text-xs text-muted-foreground">Billable</span>
+            </label>
+            {isBillable && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-muted-foreground">$</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={hourlyRate}
+                  onChange={e => setHourlyRate(e.target.value)}
+                  placeholder="0.00/hr"
+                  className="w-24 bg-white/[0.04] border border-border/40 rounded-xl px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50"
+                />
+              </div>
+            )}
           </div>
 
           {error && <p className="text-xs text-destructive">{error}</p>}

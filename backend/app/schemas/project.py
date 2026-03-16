@@ -29,7 +29,7 @@ class ProjectBase(BaseModel):
 class ProjectCreate(ProjectBase):
     """Schema for creating a project."""
 
-    organization_id: int
+    organization_id: Optional[int] = None
     client_id: Optional[int] = None
 
 

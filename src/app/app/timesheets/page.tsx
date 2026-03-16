@@ -66,8 +66,8 @@ export default function TimesheetsPage() {
 
   useEffect(() => { load() }, [tab]) // eslint-disable-line
 
-  const mySheets = timesheets.filter(t => String(t.user_id) === currentUser?.id)
-  const teamSheets = timesheets.filter(t => String(t.user_id) !== currentUser?.id)
+  const mySheets = currentUser ? timesheets.filter(t => String(t.user_id) === String(currentUser.id)) : timesheets
+  const teamSheets = currentUser ? timesheets.filter(t => String(t.user_id) !== String(currentUser.id)) : []
   const displayed = tab === 'mine' ? mySheets : teamSheets
 
   const handleSubmit = async (id: number) => {
@@ -127,8 +127,9 @@ export default function TimesheetsPage() {
         if (prev.find(t => t.id === ts.id)) return prev
         return [ts, ...prev]
       })
-    } catch {
-      showToast({ type: 'error', title: 'Failed to create timesheet' })
+      showToast({ type: 'success', title: 'Timesheet ready' })
+    } catch (e: any) {
+      showToast({ type: 'error', title: e?.message ?? 'Failed to create timesheet' })
     } finally {
       setSaving(false)
     }
@@ -184,7 +185,7 @@ export default function TimesheetsPage() {
             {displayed.map(ts => {
               const cfg = STATUS_CONFIG[ts.status]
               const isOpen = expandedId === ts.id
-              const isOwn = String(ts.user_id) === currentUser?.id
+              const isOwn = currentUser ? String(ts.user_id) === String(currentUser.id) : false
               return (
                 <div key={ts.id} className="bento-card rounded-2xl overflow-hidden">
                   <button

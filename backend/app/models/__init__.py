@@ -2,6 +2,7 @@
 
 from .base import Base
 from .organization import Organization
+from .organization_member import OrganizationMember
 from .client import Client
 from .user import User
 from .project import Project
@@ -10,4 +11,4 @@ from .timer import Timer
 from .time_entry import TimeEntry
 from .timesheet import Timesheet
 
-__all__ = ["Base", "Organization", "Client", "User", "Project", "Task", "Timer", "TimeEntry", "Timesheet"]
+__all__ = ["Base", "Organization", "OrganizationMember", "Client", "User", "Project", "Task", "Timer", "TimeEntry", "Timesheet"]

@@ -79,6 +79,23 @@
     transform: translateZ(0);
   }
 
+  .form-input {
+    @apply w-full text-sm bg-white/[0.04] border border-border/40 rounded-xl px-3 py-2 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 transition-colors;
+  }
+
+  select.form-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 2rem;
+  }
+
+  select.form-input option {
+    background: hsl(220 13% 18%);
+    color: hsl(0 0% 95%);
+  }
+
   .bento-card-hover {
     @apply bento-card transition-all duration-300 cursor-pointer;
   }

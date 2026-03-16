@@ -9,7 +9,7 @@ from app.api.api_v1.endpoints.auth import get_current_user
 from app.db.database import get_db
 from app.models.user import User
 from app.models.project import Project as ProjectModel
-from app.schemas.project import Project, ProjectCreate
+from app.schemas.project import Project, ProjectCreate, ProjectUpdate
 
 router = APIRouter()
 
@@ -116,3 +116,44 @@ def get_project(
         )
 
     return project
+
+
+@router.put("/{project_id}", response_model=Project)
+def update_project(
+    project_id: int,
+    project_data: ProjectUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Update a project."""
+    project = db.query(ProjectModel).filter(
+        ProjectModel.id == project_id,
+        ProjectModel.organization_id == current_user.organization_id,
+    ).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    for field, value in project_data.model_dump(exclude_unset=True).items():
+        setattr(project, field, value)
+
+    db.commit()
+    db.refresh(project)
+    return project
+
+
+@router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_project(
+    project_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Soft-delete a project."""
+    project = db.query(ProjectModel).filter(
+        ProjectModel.id == project_id,
+        ProjectModel.organization_id == current_user.organization_id,
+    ).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    project.is_active = False
+    db.commit()
