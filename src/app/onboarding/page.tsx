@@ -51,7 +51,7 @@ export default function OnboardingPage() {
   }
 
   const inputClass = "w-full px-4 py-3 bg-white/[0.06] border border-border/40 rounded-xl text-foreground placeholder-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-colors"
-  const btnClass = "w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-semibold rounded-xl transition-colors"
+  const btnClass = "w-full py-3 bg-primary hover:bg-primary/80 disabled:opacity-40 text-primary-foreground font-semibold rounded-xl transition-colors"
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">

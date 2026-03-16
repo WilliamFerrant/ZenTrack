@@ -186,7 +186,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-semibold rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background mt-2"
+            className="w-full py-3 px-4 bg-primary hover:bg-primary/80 disabled:opacity-40 text-primary-foreground font-semibold rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background mt-2"
           >
             {isSubmitting ? (
               <span className="flex items-center justify-center gap-2">

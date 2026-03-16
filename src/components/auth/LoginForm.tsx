@@ -171,7 +171,7 @@ export function LoginForm({ onSuccess, redirectTo = '/app/tracking' }: LoginForm
         <button
           type="submit"
           disabled={isLoggingIn}
-          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-semibold rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background"
+          className="w-full py-3 px-4 bg-primary hover:bg-primary/80 disabled:opacity-40 text-primary-foreground font-semibold rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background"
         >
           {isLoggingIn ? (
             <span className="flex items-center justify-center gap-2">
