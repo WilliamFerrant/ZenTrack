@@ -34,6 +34,12 @@ export function ProtectedRoute({
       return
     }
 
+    // Redirect to onboarding if no organization
+    if (user && !user.organization_id) {
+      router.replace('/onboarding')
+      return
+    }
+
     // Check role requirements if specified
     if (requiredRole && user) {
       const hasRequiredRole = Array.isArray(requiredRole)

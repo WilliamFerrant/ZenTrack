@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores'
 import { api } from '@/lib/api'
+import type { LoginRequest } from '@/types'
 
 interface RegisterFormState {
   full_name: string
@@ -16,7 +17,7 @@ interface RegisterFormState {
 
 export default function RegisterPage() {
   const router = useRouter()
-  const { isAuthenticated, isLoading } = useAuthStore()
+  const { isAuthenticated, isLoading, login } = useAuthStore()
 
   const [formState, setFormState] = useState<RegisterFormState>({
     full_name: '',
@@ -68,7 +69,8 @@ export default function RegisterPage() {
         email: formState.email.trim(),
         password: formState.password,
       })
-      router.push('/login?registered=1')
+      await login({ email: formState.email.trim(), password: formState.password, remember_me: false })
+      router.push('/onboarding')
     } catch (err: any) {
       setServerError(err?.message || 'Registration failed. Please try again.')
     } finally {
