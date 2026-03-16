@@ -45,8 +45,6 @@ export function LoginForm({ onSuccess, redirectTo = '/app/tracking' }: LoginForm
 
     if (!formState.password) {
       errors.password = 'Password is required'
-    } else if (formState.password.length < 1) {
-      errors.password = 'Password is required'
     }
 
     setFieldErrors(errors)
@@ -57,9 +55,7 @@ export function LoginForm({ onSuccess, redirectTo = '/app/tracking' }: LoginForm
     e.preventDefault()
     clearError()
 
-    if (!validateForm()) {
-      return
-    }
+    if (!validateForm()) return
 
     try {
       const credentials: LoginRequest = {
@@ -67,37 +63,19 @@ export function LoginForm({ onSuccess, redirectTo = '/app/tracking' }: LoginForm
         password: formState.password,
         remember_me: formState.rememberMe,
       }
-
       await login(credentials)
-
-      // Success callback
       if (onSuccess) {
         onSuccess()
       } else {
         router.push(redirectTo)
       }
     } catch (err: any) {
-      // Error is handled by the store, but we can add additional UI feedback here
       console.error('Login failed:', err)
-
-      // Provide specific feedback for certain error types
-      if (err?.status === 401) {
-        // The error is already set by the store, no need to duplicate
-        console.log('Invalid credentials provided')
-      } else if (err?.status === 429) {
-        // Rate limiting
-        console.log('Too many login attempts, please try again later')
-      } else if (!navigator.onLine) {
-        // Network error
-        console.log('No internet connection')
-      }
     }
   }
 
   const handleFieldChange = (field: keyof LoginFormState, value: any) => {
     setFormState(prev => ({ ...prev, [field]: value }))
-
-    // Clear field error when user starts typing
     if (fieldErrors[field as keyof typeof fieldErrors]) {
       setFieldErrors(prev => ({ ...prev, [field]: undefined }))
     }
@@ -105,32 +83,23 @@ export function LoginForm({ onSuccess, redirectTo = '/app/tracking' }: LoginForm
 
   return (
     <div className="w-full max-w-md mx-auto">
-      {/* Form Header */}
+      {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Welcome to Zentracker
-        </h1>
-        <p className="text-gray-600">
-          Sign in to your account to track your time
-        </p>
+        <h1 className="text-3xl font-bold text-white mb-2">Welcome back</h1>
+        <p className="text-zinc-400">Sign in to your account to track your time</p>
       </div>
 
       {/* Global Error */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-          <div className="flex">
-            <div className="text-red-800 text-sm">
-              {error}
-            </div>
-          </div>
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+          <p className="text-red-400 text-sm">{error}</p>
         </div>
       )}
 
-      {/* Login Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Email Field */}
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Email */}
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="email" className="block text-sm font-medium text-zinc-300 mb-1.5">
             Email address
           </label>
           <input
@@ -138,23 +107,22 @@ export function LoginForm({ onSuccess, redirectTo = '/app/tracking' }: LoginForm
             id="email"
             value={formState.email}
             onChange={(e) => handleFieldChange('email', e.target.value)}
-            className={`
-              w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500
-              ${fieldErrors.email ? 'border-red-300' : 'border-gray-300'}
-            `}
-            placeholder="Enter your email"
+            className={`w-full px-4 py-3 bg-zinc-800 border rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+              fieldErrors.email ? 'border-red-500/50' : 'border-zinc-700'
+            }`}
+            placeholder="you@example.com"
             disabled={isLoggingIn}
             autoComplete="email"
             autoFocus
           />
           {fieldErrors.email && (
-            <p className="mt-1 text-sm text-red-600">{fieldErrors.email}</p>
+            <p className="mt-1.5 text-sm text-red-400">{fieldErrors.email}</p>
           )}
         </div>
 
-        {/* Password Field */}
+        {/* Password */}
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="password" className="block text-sm font-medium text-zinc-300 mb-1.5">
             Password
           </label>
           <div className="relative">
@@ -163,25 +131,24 @@ export function LoginForm({ onSuccess, redirectTo = '/app/tracking' }: LoginForm
               id="password"
               value={formState.password}
               onChange={(e) => handleFieldChange('password', e.target.value)}
-              className={`
-                w-full px-3 py-2 pr-10 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500
-                ${fieldErrors.password ? 'border-red-300' : 'border-gray-300'}
-              `}
-              placeholder="Enter your password"
+              className={`w-full px-4 py-3 pr-16 bg-zinc-800 border rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                fieldErrors.password ? 'border-red-500/50' : 'border-zinc-700'
+              }`}
+              placeholder="••••••••"
               disabled={isLoggingIn}
               autoComplete="current-password"
             />
             <button
               type="button"
               onClick={() => handleFieldChange('showPassword', !formState.showPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-400 hover:text-zinc-200 transition-colors text-sm font-medium"
               disabled={isLoggingIn}
             >
               {formState.showPassword ? 'Hide' : 'Show'}
             </button>
           </div>
           {fieldErrors.password && (
-            <p className="mt-1 text-sm text-red-600">{fieldErrors.password}</p>
+            <p className="mt-1.5 text-sm text-red-400">{fieldErrors.password}</p>
           )}
         </div>
 
@@ -192,47 +159,40 @@ export function LoginForm({ onSuccess, redirectTo = '/app/tracking' }: LoginForm
             id="remember-me"
             checked={formState.rememberMe}
             onChange={(e) => handleFieldChange('rememberMe', e.target.checked)}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            className="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
             disabled={isLoggingIn}
           />
-          <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+          <label htmlFor="remember-me" className="ml-2 block text-sm text-zinc-400">
             Remember me for 30 days
           </label>
         </div>
 
-        {/* Submit Button */}
+        {/* Submit */}
         <button
           type="submit"
           disabled={isLoggingIn}
-          className={`
-            w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white
-            ${isLoggingIn
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
-            }
-          `}
+          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
         >
           {isLoggingIn ? (
-            <div className="flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+            <span className="flex items-center justify-center gap-2">
+              <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
               Signing in...
-            </div>
+            </span>
           ) : (
             'Sign in'
           )}
         </button>
 
-        {/* Footer Links */}
-        <div className="text-center text-sm">
-          <a href="#" className="text-blue-600 hover:text-blue-500">
+        {/* Links */}
+        <div className="text-center">
+          <a href="#" className="text-sm text-zinc-400 hover:text-zinc-200 transition-colors">
             Forgot your password?
           </a>
         </div>
 
-        {/* Register Link */}
-        <div className="text-center text-sm text-gray-600">
+        <div className="text-center text-sm text-zinc-500">
           Don&apos;t have an account?{' '}
-          <a href="/register" className="text-blue-600 hover:text-blue-500 font-medium">
+          <a href="/register" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
             Sign up
           </a>
         </div>

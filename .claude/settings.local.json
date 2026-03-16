@@ -6,7 +6,17 @@
       "Bash(docker --version)",
       "Bash(pip install:*)",
       "Bash(npx tsc:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(wc -l \"c:/web dev/time-tracker/backend/app/api/api_v1/endpoints\"/*.py)",
+      "Bash(find 'c:/web dev/time-tracker/backend' -name *.py)",
+      "Bash(xargs grep:*)",
+      "Bash(python -c \"from app.models import Timesheet; print\\(''ok''\\)\")",
+      "Bash(python -c \":*)",
+      "Bash(python -m alembic revision --autogenerate -m \"add clients tasks timesheets timer_pause_resume\")",
+      "Bash(python -m alembic upgrade head)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM2MjE3MDgsInN1YiI6IjEifQ.nDQb3YVSAnNJcrpV2pxHrOG6rtT0HhnkwkThw-Youx4\")",
+      "Bash(curl -s -X POST \"http://localhost:8000/api/v1/projects\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"\"name\"\":\"\"test\"\",\"\"color\"\":\"\"#3B82F6\"\"}')",
+      "Bash(/opt/venv/bin/alembic upgrade:*)"
     ]
   }
 }
