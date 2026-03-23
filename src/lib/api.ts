@@ -16,7 +16,7 @@ export class ApiError extends Error {
 // In-flight refresh promise — shared so concurrent 401s only trigger one refresh
 let refreshPromise: Promise<string> | null = null;
 
-async function getRefreshedToken(): Promise<string> {
+export async function getRefreshedToken(): Promise<string> {
   if (refreshPromise) return refreshPromise;
 
   refreshPromise = (async () => {

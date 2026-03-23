@@ -1,7 +1,7 @@
 // Authentication store using Zustand
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
-import { api } from '../lib/api'
+import { api, getRefreshedToken } from '../lib/api'
 import type { User, AuthTokens, LoginRequest, AuthState } from '../types'
 
 interface AuthStore extends AuthState {
@@ -117,33 +117,18 @@ export const useAuthStore = create<AuthStore>()(
           }
 
           try {
-            const response = await api.post<{
-              access_token: string
-              refresh_token: string
-              expires_in: number
-              token_type: string
-            }>('/auth/refresh', {
-              refresh_token: tokens.refresh_token,
-            })
+            // Use the shared singleton refresh to avoid concurrent refresh races
+            const newAccessToken = await getRefreshedToken()
 
+            // localStorage is already updated by getRefreshedToken; sync the store state
+            const newRefreshToken = localStorage.getItem('refresh_token') || tokens.refresh_token
             const newTokens: AuthTokens = {
-              access_token: response.access_token,
-              refresh_token: response.refresh_token,
-              token_type: response.token_type as 'bearer',
-              expires_in: response.expires_in,
-              expires_at: new Date(Date.now() + response.expires_in * 1000),
+              ...tokens,
+              access_token: newAccessToken,
+              refresh_token: newRefreshToken,
             }
 
-            // Update localStorage
-            localStorage.setItem('access_token', newTokens.access_token)
-            localStorage.setItem('refresh_token', newTokens.refresh_token)
-            localStorage.setItem('token_expiry', newTokens.expires_at.toISOString())
-
-            set({
-              tokens: newTokens,
-              error: null,
-            })
-
+            set({ tokens: newTokens, error: null })
             return newTokens
           } catch (error) {
             // Refresh failed, logout user
@@ -161,6 +146,7 @@ export const useAuthStore = create<AuthStore>()(
           try {
             set({ isLoading: true })
 
+            // api.get already handles 401 → refresh → retry internally
             const user = await api.get<User>('/auth/me')
 
             set({
@@ -171,15 +157,9 @@ export const useAuthStore = create<AuthStore>()(
             })
           } catch (error: any) {
             console.error('Failed to load user:', error)
-
-            // If token is invalid, try refresh
+            // If we still get 401 after the api layer's refresh attempt, logout
             if (error.status === 401) {
-              try {
-                await get().refreshTokens()
-                await get().loadUser() // Retry after refresh
-              } catch (refreshError) {
-                get().logout()
-              }
+              get().logout()
             } else {
               set({
                 isLoading: false,
