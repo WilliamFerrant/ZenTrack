@@ -16,10 +16,7 @@ app = FastAPI(
 # Set up CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:3001",
-    ],
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_origin_regex=r"https?://.*\.traefik\.me",
     allow_credentials=True,
     allow_methods=["*"],
